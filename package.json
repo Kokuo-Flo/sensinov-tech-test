@@ -1,0 +1,56 @@
+{
+  "name": "smart-building",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "build:strict": "node scripts/build-strict.mjs",
+    "typecheck": "ngc -p tsconfig.app.json --noEmit",
+    "typecheck:spec": "tsc -p tsconfig.spec.json --noEmit",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "validate": "npm run lint && npm run typecheck && npm run build:strict",
+    "test": "ng test --watch=false",
+    "test:coverage": "ng test --watch=false --coverage",
+    "check": "npm run lint && npm run typecheck && npm run typecheck:spec && npm test && npm run build:strict",
+    "format": "prettier --write \"src/**/*.{ts,html,scss}\""
+  },
+  "private": true,
+  "packageManager": "npm@10.9.8",
+  "dependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/compiler": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "@angular/platform-browser": "^22.0.0",
+    "@angular/router": "^22.0.0",
+    "chart.js": "^4.6.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.0.5",
+    "@angular/cli": "^22.0.5",
+    "@angular/compiler-cli": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.12",
+    "angular-eslint": "^22.6.0",
+    "eslint": "^9.39.5",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.0.8"
+  },
+  "imports": {
+    "#components/*": "./src/app/components/*.ts",
+    "#services/*": "./src/app/services/*.ts",
+    "#dao/*": "./src/app/dao/*.ts",
+    "#models/*": "./src/app/models/*.ts",
+    "#pipes/*": "./src/app/pipes/*.ts",
+    "#directives/*": "./src/app/directives/*.ts",
+    "#utils/*": "./src/app/utils/*.ts",
+    "#mocks/*": "./src/app/mocks/*.ts",
+    "#testing/*": "./src/testing/*.ts"
+  }
+}

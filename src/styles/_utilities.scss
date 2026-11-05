@@ -1,0 +1,71 @@
+$spaces: (
+  '0': var(--space-0),
+  'xs': var(--space-xs),
+  'sm': var(--space-sm),
+  'md': var(--space-md),
+  'lg': var(--space-lg),
+  'xl': var(--space-xl),
+  '2xl': var(--space-2xl),
+);
+
+// Layout
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.grid { display: grid; }
+.block { display: block; }
+.hidden { display: none; }
+.flex-column { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1 1 0; min-width: 0; }
+.shrink-0 { flex-shrink: 0; }
+.items-start { align-items: flex-start; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+
+// Spacing: gap-*, p-*, px-*, py-*, m-*, mt-*, mb-*
+@each $name, $value in $spaces {
+  .gap-#{$name} { gap: $value; }
+  .p-#{$name} { padding: $value; }
+  .px-#{$name} { padding-inline: $value; }
+  .py-#{$name} { padding-block: $value; }
+  .m-#{$name} { margin: $value; }
+  .mt-#{$name} { margin-top: $value; }
+  .mb-#{$name} { margin-bottom: $value; }
+}
+
+// Sizing
+.w-100 { width: 100%; }
+.h-100 { height: 100%; }
+.overflow-auto { overflow: auto; }
+.overflow-hidden { overflow: hidden; }
+
+// Typography
+.text-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); }
+.text-heading { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.text-body { font-size: var(--font-size-sm); }
+.text-caption { font-size: var(--font-size-xs); }
+.text-strong { font-weight: var(--font-weight-semibold); }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.text-nowrap { white-space: nowrap; }
+
+// Colors
+.text-muted { color: var(--color-text-muted); }
+.text-subtle { color: var(--color-text-subtle); }
+.text-primary { color: var(--color-primary); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }
+.bg-surface { background: var(--color-surface); }
+.bg-surface-alt { background: var(--color-surface-alt); }
+
+// Surfaces
+.border { border: 1px solid var(--color-border); }
+.border-bottom { border-bottom: 1px solid var(--color-border); }
+.rounded { border-radius: var(--radius-md); }
+.shadow { box-shadow: var(--shadow-sm); }
+.cursor-pointer { cursor: pointer; }

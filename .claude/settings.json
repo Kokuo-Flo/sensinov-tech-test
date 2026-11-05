@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm start*)",
+      "Bash(npx ng *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "ask": [
+      "Bash(npm install*)",
+      "Bash(npm uninstall*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git pull*)",
+      "Bash(git merge*)",
+      "Bash(git rebase*)",
+      "Bash(git reset*)",
+      "Bash(git restore*)",
+      "Bash(git checkout*)",
+      "Bash(git switch*)",
+      "Bash(git clean*)",
+      "Bash(git stash*)",
+      "Bash(git rm*)"
+    ]
+  }
+}
