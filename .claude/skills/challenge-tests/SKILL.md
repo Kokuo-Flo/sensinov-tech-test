@@ -18,7 +18,7 @@ For each spec, read the file it covers and list: public methods and their branch
 | T-B3 | blocker    | Tests Angular/framework, not app behavior (manual `emit`, getter/setter) |
 | T-B4 | blocker    | Private member access, `any`, `!`                                        |
 | T-W1 | warning    | Hand-rolled mock where `provideServiceMock` applies                     |
-| T-W2 | warning    | Positional access or CSS/tag selector instead of `data-cy`              |
+| T-W2 | warning    | Positional access or CSS/tag selector instead of `data-testid`              |
 | T-W3 | warning    | Bare `toHaveBeenCalled()` where arguments matter                         |
 | T-W4 | warning    | Name does not match what is asserted                                    |
 | T-S1 | suggestion | Missing error/edge path for a covered method                            |

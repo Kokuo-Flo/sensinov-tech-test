@@ -1,0 +1,125 @@
+<section class="flex flex-column gap-xl">
+  <sb-breadcrumb [items]="breadcrumbItems()" data-testid="equipment-breadcrumb" />
+
+  @if (isLoading()) {
+    <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="equipment-detail-loading">
+      <span class="sr-only">Chargement…</span>
+      <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+    </div>
+  } @else if (problem(); as problem) {
+    <p class="callout callout--error" role="alert" data-testid="equipment-detail-error">{{ problem | problemMessage: 'Équipement' }}</p>
+  } @else if (equipment(); as equipment) {
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-lg">
+        <h1 class="text-title" data-testid="equipment-name">{{ equipment.name }}</h1>
+        <dl class="flex flex-wrap gap-2xl" data-testid="equipment-summary">
+          <div class="flex flex-column items-start gap-xs">
+            <dt class="text-muted text-caption">Type</dt>
+            <dd><span class="tag" data-testid="equipment-type">{{ equipment.type | equipmentTypeLabel }}</span></dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Périmètre</dt>
+            <dd class="text-strong" data-testid="equipment-scope">{{ equipment.meterScope | meterScopeLabel }}</dd>
+          </div>
+          <div class="flex flex-column items-start gap-xs">
+            <dt class="text-muted text-caption">Fournisseur</dt>
+            <dd><span class="tag tag--neutral" data-testid="equipment-vendor">{{ equipment.vendor }}</span></dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Zone</dt>
+            <dd class="text-strong" data-testid="equipment-zone">{{ equipment.zone ?? '—' }}</dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Pas de mesure</dt>
+            <dd class="text-strong" data-testid="equipment-interval">{{ equipment.samplingIntervalMinutes }} min</dd>
+          </div>
+        </dl>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-lg">
+        <div class="flex flex-wrap items-center gap-xl">
+          @if (hasSeveralMetrics()) {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Métrique</mat-label>
+              <mat-select [value]="selectedMetric()" (selectionChange)="onSelectMetric($event)" data-testid="metric-select">
+                @for (metric of metrics(); track metric.key) {
+                  <mat-option [value]="metric.key">{{ metric.key | metricLabel }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          } @else if (selectedMetric(); as metric) {
+            <p class="flex items-center gap-sm" data-testid="metric-label">
+              <span class="text-muted">Métrique</span>
+              <span class="text-strong">{{ metric | metricLabel }}</span>
+            </p>
+          }
+          <div class="flex items-center gap-sm">
+            <span id="period-label" class="text-muted">Période</span>
+            <mat-button-toggle-group
+              [value]="selectedPeriod()"
+              (change)="onSelectPeriod($event)"
+              [hideSingleSelectionIndicator]="true"
+              aria-labelledby="period-label"
+              data-testid="period-select"
+            >
+              <mat-button-toggle value="7-days" data-testid="period-7-days">7 jours</mat-button-toggle>
+              <mat-button-toggle value="4-weeks" data-testid="period-4-weeks">4 semaines</mat-button-toggle>
+              <mat-button-toggle value="8-weeks" data-testid="period-8-weeks">8 semaines</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </div>
+
+        @if (isSeriesLoading()) {
+          <div class="equipment-detail__chart-placeholder flex flex-column justify-center" role="status" aria-busy="true" data-testid="series-loading">
+            <span class="sr-only">Chargement des mesures…</span>
+            <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+          </div>
+        } @else if (seriesProblem(); as seriesProblem) {
+          <p class="callout callout--error" role="alert" data-testid="series-error">
+            {{ seriesProblem | problemMessage: 'Série de mesures' }}
+          </p>
+        } @else if (isSeriesEmpty()) {
+          <p class="callout" role="status" data-testid="series-empty">Aucune mesure sur cette période.</p>
+        } @else {
+          <sb-line-chart [points]="points()" [unit]="unit()" data-testid="equipment-chart" />
+        }
+      </mat-card-content>
+    </mat-card>
+
+    @if (hasSeriesValues()) {
+      <mat-card appearance="outlined">
+        <mat-card-content class="flex flex-column gap-md">
+          <h2 class="text-heading">{{ LATEST_POINTS_COUNT }} dernières valeurs brutes</h2>
+          <div class="overflow-auto">
+            <table mat-table [dataSource]="latestPoints()" data-testid="latest-values-table">
+              <ng-container matColumnDef="timestamp">
+                <th mat-header-cell *matHeaderCellDef scope="col">Horodatage</th>
+                <ng-template matCellDef let-point [sbTemplateItemOf]="latestPoints()">
+                  <td mat-cell class="text-nowrap" data-testid="latest-value-timestamp">{{ point.timestamp | date: 'dd/MM/yyyy HH:mm' }}</td>
+                </ng-template>
+              </ng-container>
+
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="cell-numeric">Valeur ({{ unit() }})</th>
+                <ng-template matCellDef let-point [sbTemplateItemOf]="latestPoints()">
+                  <td mat-cell class="cell-numeric" data-testid="latest-value">
+                    @if (point.value === null) {
+                      —
+                    } @else {
+                      {{ point.value | number: '1.0-3' }}
+                    }
+                  </td>
+                </ng-template>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="LATEST_VALUES_COLUMNS"></tr>
+              <tr mat-row *matRowDef="let row; columns: LATEST_VALUES_COLUMNS" data-testid="latest-value-row"></tr>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</section>

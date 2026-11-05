@@ -1,8 +1,33 @@
 <div class="app-shell flex flex-column h-100">
-  <header class="app-shell__header flex items-center px-xl py-md bg-surface border-bottom">
-    <span class="text-heading text-primary" data-cy="app-title">Smart Building</span>
+  <header class="border-bottom">
+    <mat-toolbar class="app-shell__toolbar">
+      <div class="app-shell__bar flex items-center gap-2xl w-100">
+        <a routerLink="/buildings" class="app-shell__brand text-heading text-primary" data-testid="app-title">Smart Building</a>
+        <nav aria-label="Navigation principale" class="flex items-center gap-xs">
+          <a
+            routerLink="/buildings"
+            routerLinkActive="app-shell__nav-link--active"
+            ariaCurrentWhenActive="page"
+            class="app-shell__nav-link px-md py-sm rounded text-body text-strong"
+            data-testid="nav-buildings"
+            >Bâtiments</a
+          >
+          <a
+            routerLink="/reports"
+            routerLinkActive="app-shell__nav-link--active"
+            ariaCurrentWhenActive="page"
+            class="app-shell__nav-link px-md py-sm rounded text-body text-strong"
+            data-testid="nav-reports"
+            >Rapport analyste</a
+          >
+        </nav>
+        <sb-theme-toggle class="ml-auto" />
+      </div>
+    </mat-toolbar>
   </header>
-  <main class="flex-1 overflow-auto p-xl">
-    <router-outlet />
+  <main class="flex-1 overflow-auto">
+    <div class="app-shell__content px-xl py-xl">
+      <router-outlet />
+    </div>
   </main>
 </div>

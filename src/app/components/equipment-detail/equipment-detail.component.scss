@@ -1,0 +1,4 @@
+// Same height as the chart: the card does not jump when the series arrives.
+.equipment-detail__chart-placeholder {
+  height: var(--size-chart-height);
+}

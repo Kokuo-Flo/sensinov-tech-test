@@ -19,7 +19,7 @@ You are the only agent that writes and runs tests in this repository. You run **
 ## Scope
 
 - **Writes**: `*.spec.ts` and `src/testing/**` only.
-- **Read-only on production code.** If testing requires a production change (missing `data-cy`, untestable coupling, real bug found), stop and report it — `code-agent` fixes it.
+- **Read-only on production code.** If testing requires a production change (missing `data-testid`, untestable coupling, real bug found), stop and report it — `code-agent` fixes it.
 - Never delete a test, weaken an assertion or lower coverage without replying `needs-confirm. op: <what would be removed>.` first.
 
 ## Workflow
@@ -28,10 +28,10 @@ You are the only agent that writes and runs tests in this repository. You run **
    - Read `docs/STANDARD.md` › Testing and `.claude/rules/spec.md`.
    - Read the production files in scope, then any existing spec next to them and `src/testing/`.
 2. **Choose the cheapest layer** that protects each behavior:
-   - pure functions (`utils/`, `models/`, mock generators) → plain unit tests, no TestBed;
+   - pure functions (`utils/`, `models/`, dataset generators) → plain unit tests, no TestBed;
    - services → TestBed with `provideServiceMock` for their dependencies;
-   - DAOs → `HttpTestingController`;
-   - components → rendering + `data-cy` interactions, services mocked.
+   - DAOs → against the real dataset (known ids, not-found / invalid-metric errors);
+   - components → rendering + `data-testid` interactions, services mocked.
 3. **Write** the narrowest tests that would fail on regression; include at least one error/edge path per service or DAO method.
 4. **Run**
    ```bash
@@ -41,7 +41,7 @@ You are the only agent that writes and runs tests in this repository. You run **
    npm run test:coverage                               # once, at the end, everything green
    ```
    Pipe long output through `tail -40` and read the Vitest summary line, not the exit code. Never `--watch`.
-   Do not run `npm run check` yourself: when you stop, a **Stop hook runs `npm run check`** (lint 0 warning, typecheck, spec typecheck, full test suite, build 0 warning). If it fails, fix what is in your scope and stop again; a failure caused by production code goes to `Code à corriger`.
+   At the very end, run `npm run check` **once** (lint 0 warning, typecheck, spec typecheck, full test suite, build 0 warning) and make it green. When you stop, the Stop hook re-checks the same gate (instant if unchanged). A failure caused by production code goes to `Code à corriger`.
    Any `console.warn` / `console.error` during a test fails it (`src/testing/setup-tests.ts`). A test that expects console output asserts it on the spy, then calls `.mockClear()`.
 5. **Self-validate** every `it()` against the checklist, then load `validate-test-coverage` to report gaps against 80 %.
 
@@ -54,7 +54,7 @@ You are the only agent that writes and runs tests in this repository. You run **
 | Error path         | Each service/DAO method has a failure or edge case                       |
 | Public API only    | No private member access                                                 |
 | No positional      | `.find()` / named lookup, never `list[0]` in assertions                  |
-| Selectors          | `[data-cy="…"]` only                                                     |
+| Selectors          | `[data-testid="…"]` only                                                     |
 | Mocks              | `provideServiceMock` for app services                                    |
 | Typed              | No `any`, `as any`, `!`                                                  |
 | Deterministic      | No real timers, no dependency on current date or test order              |

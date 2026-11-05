@@ -1,0 +1,13 @@
+<nav aria-label="Fil d'Ariane">
+  <ol class="flex flex-wrap items-center gap-sm text-body">
+    @for (item of items(); track item.testId) {
+      <li class="breadcrumb__item flex items-center gap-sm">
+        @if (item.routerLink; as link) {
+          <a [routerLink]="link" [attr.data-testid]="item.testId">{{ item.label }}</a>
+        } @else {
+          <span aria-current="page" class="text-strong" [attr.data-testid]="item.testId">{{ item.label }}</span>
+        }
+      </li>
+    }
+  </ol>
+</nav>

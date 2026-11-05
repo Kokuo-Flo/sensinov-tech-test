@@ -1,0 +1,47 @@
+<section class="flex flex-column gap-xl">
+  <h1 class="text-title" data-testid="analyst-report-page-title">Rapport analyste</h1>
+
+  @if (isLoading()) {
+    <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="analyst-report-loading">
+      <span class="sr-only">Chargement…</span>
+      <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+    </div>
+  } @else if (problem(); as problem) {
+    <p class="callout callout--error" role="alert" data-testid="analyst-report-error">{{ problem | problemMessage: 'Rapport' }}</p>
+  } @else {
+    @for (report of reports(); track report.id) {
+      <mat-card appearance="outlined" data-testid="analyst-report">
+        <mat-card-content class="flex flex-column gap-lg">
+          <div class="flex flex-column gap-xs">
+            <h2 class="text-heading" data-testid="analyst-report-title">{{ report.title }}</h2>
+            <p class="text-muted text-caption">
+              <span data-testid="analyst-report-author">{{ report.author }}</span>
+              — publié le
+              <time [attr.datetime]="report.publishedAt" data-testid="analyst-report-date">{{ report.publishedAt | date: 'longDate' : 'UTC' }}</time>
+            </p>
+          </div>
+
+          <ul class="flex flex-column gap-md">
+            @for (recommendation of report.recommendations; track recommendation.id) {
+              <li class="flex flex-column gap-xs p-lg border rounded" data-testid="recommendation">
+                <div class="flex flex-wrap items-center justify-between gap-sm">
+                  <p class="text-strong" data-testid="recommendation-title">{{ recommendation.title }}</p>
+                  @if (recommendation.buildingName === null) {
+                    <span class="tag tag--neutral" data-testid="recommendation-building">Ensemble du parc</span>
+                  } @else {
+                    <span class="tag" data-testid="recommendation-building">{{ recommendation.buildingName }}</span>
+                  }
+                </div>
+                <p class="text-muted" data-testid="recommendation-description">{{ recommendation.description }}</p>
+              </li>
+            } @empty {
+              <li class="text-muted" data-testid="recommendation-list-empty">Aucune recommandation.</li>
+            }
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    } @empty {
+      <p class="callout" role="status" data-testid="analyst-report-empty">Aucun rapport publié.</p>
+    }
+  }
+</section>

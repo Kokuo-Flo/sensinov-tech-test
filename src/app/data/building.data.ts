@@ -1,0 +1,123 @@
+import { type Building } from '#models/building.model';
+
+/**
+ * Fictional portfolio of 10 office buildings.
+ * Baseline intensity (baselineAnnualEnergyKwh / surfaceM2) stays within 150–250 kWh/m²/yr, higher for older buildings;
+ * the measurement generator scales HVAC power with it. Injected anomalies per building: see `anomalies.data.ts`.
+ */
+export const BUILDINGS: readonly Building[] = [
+  {
+    id: 'bld-paris',
+    name: 'Le Lumière',
+    city: 'Paris',
+    countryCode: 'FR',
+    surfaceM2: 12_000,
+    constructionYear: 2008,
+    floors: 9,
+    occupancyCapacity: 850,
+    baselineAnnualEnergyKwh: 2_100_000,
+  },
+  {
+    id: 'bld-lyon',
+    name: 'Part-Dieu Sud',
+    city: 'Lyon',
+    countryCode: 'FR',
+    surfaceM2: 8_500,
+    constructionYear: 1994,
+    floors: 7,
+    occupancyCapacity: 600,
+    baselineAnnualEnergyKwh: 1_785_000,
+  },
+  {
+    id: 'bld-warsaw',
+    name: 'Mokotów Office',
+    city: 'Varsovie',
+    countryCode: 'PL',
+    surfaceM2: 15_000,
+    constructionYear: 2012,
+    floors: 12,
+    occupancyCapacity: 1_100,
+    baselineAnnualEnergyKwh: 2_475_000,
+  },
+  {
+    id: 'bld-berlin',
+    name: 'Spree Campus',
+    city: 'Berlin',
+    countryCode: 'DE',
+    surfaceM2: 18_000,
+    constructionYear: 2001,
+    floors: 8,
+    occupancyCapacity: 1_250,
+    baselineAnnualEnergyKwh: 3_510_000,
+  },
+  {
+    id: 'bld-munich',
+    name: 'Isar Tower',
+    city: 'Munich',
+    countryCode: 'DE',
+    surfaceM2: 22_000,
+    constructionYear: 2015,
+    floors: 20,
+    occupancyCapacity: 1_600,
+    baselineAnnualEnergyKwh: 3_520_000,
+  },
+  {
+    id: 'bld-madrid',
+    name: 'Castellana 200',
+    city: 'Madrid',
+    countryCode: 'ES',
+    surfaceM2: 10_000,
+    constructionYear: 1988,
+    floors: 14,
+    occupancyCapacity: 700,
+    baselineAnnualEnergyKwh: 2_200_000,
+  },
+  {
+    id: 'bld-milan',
+    name: 'Porta Nuova B',
+    city: 'Milan',
+    countryCode: 'IT',
+    surfaceM2: 9_000,
+    constructionYear: 2018,
+    floors: 10,
+    occupancyCapacity: 650,
+    baselineAnnualEnergyKwh: 1_350_000,
+  },
+  {
+    id: 'bld-amsterdam',
+    name: 'Zuidas Hub',
+    city: 'Amsterdam',
+    countryCode: 'NL',
+    surfaceM2: 7_000,
+    constructionYear: 2005,
+    floors: 6,
+    occupancyCapacity: 520,
+    baselineAnnualEnergyKwh: 1_295_000,
+  },
+  {
+    id: 'bld-brussels',
+    name: 'Quartier Léopold',
+    city: 'Bruxelles',
+    countryCode: 'BE',
+    surfaceM2: 6_000,
+    constructionYear: 1979,
+    floors: 7,
+    occupancyCapacity: 420,
+    baselineAnnualEnergyKwh: 1_470_000,
+  },
+  {
+    id: 'bld-krakow',
+    name: 'Zabłocie Park',
+    city: 'Cracovie',
+    countryCode: 'PL',
+    surfaceM2: 5_000,
+    constructionYear: 2019,
+    floors: 5,
+    occupancyCapacity: 380,
+    baselineAnnualEnergyKwh: 775_000,
+  },
+];
+
+export function findBuilding(buildingId: string): Building | null {
+  return BUILDINGS.find((building: Building) => building.id === buildingId) ?? null;
+}

@@ -14,18 +14,18 @@ paths:
   providers: [provideServiceMock(BuildingService, { buildings: signal([BUILDING_FIXTURE]) })];
   ```
   Never hand-roll `{ provide: X, useValue: { … } }` for an app service.
-- HTTP (DAO specs): `provideHttpClient()` + `provideHttpClientTesting()`, then `HttpTestingController.expectOne()` and `verify()` in `afterEach`.
+- DAO specs: plain `TestBed.inject(Dao)` against the real dataset — assert known ids, ranges and the `DataProblemError` paths (`not-found`, `invalid-metric`).
 - **Console is a failure**: any `console.warn` / `console.error` during a test fails it (`src/testing/setup-tests.ts`, loaded globally). When a test expects console output, assert it on the spy (`vi.mocked(console.error)`), then `.mockClear()` it.
 - Async: `await fixture.whenStable()`; timers via `vi.useFakeTimers()` / `vi.advanceTimersByTime()`. No `fakeAsync` (no zone.js), **no real `setTimeout`**.
 - Component specs whose children are irrelevant: `TestBed.overrideComponent(C, { set: { imports: [] } })` or `{ set: { template: '' } }` — never `NO_ERRORS_SCHEMA`.
-- Pure functions (`utils/`, `models/`, mock generators): plain `describe` / `it`, no TestBed.
+- Pure functions (`utils/`, `models/`, dataset generators): plain `describe` / `it`, no TestBed.
 
 ## Shape
 
 - `describe('BuildingService', …)` / `it('should <observable behavior>', …)`.
 - Arrange / Act / Assert, separated by a blank line.
 - Fixtures contain only the fields the test needs; build them with a small factory in the spec or in `src/testing/`.
-- DOM queries: `[data-cy="…"]` only.
+- DOM queries: `[data-testid="…"]` only.
 
 ## Forbidden — each one is a blocker
 
@@ -45,6 +45,6 @@ Also forbidden: `any` / `as any`, non-null `!`, `NO_ERRORS_SCHEMA`, `--watch`, t
 
 ## Required
 
-- Each service/DAO method: at least one **error or edge path** (HTTP error, empty list, missing value).
+- Each service/DAO method: at least one **error or edge path** (not-found, empty list, missing value).
 - Each `computed()` with branches: one test per branch.
 - Coverage ≥ 80 % on new or modified code.

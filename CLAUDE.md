@@ -4,14 +4,14 @@
 
 **Smart Building** — Angular 22 SPA built for a Product Engineer case study (SaaS + IoT platform for office buildings, goal: cut energy-related emissions).
 
-- **Starting point**: a deliberately limited app reproducing the *current* client experience — sensor data shown one page per equipment, no prioritization, no way to act — fed by mocked data.
-- **Then**: successive evolutions toward the proposed experience. Every evolution reuses the same mock dataset so "before / after" can be demoed side by side.
+- **Starting point**: a deliberately limited app reproducing the *current* client experience — sensor data shown one page per equipment, no prioritization, no way to act — fed by an in-memory deterministic dataset (there is no backend).
+- **Then**: successive evolutions toward the proposed experience. Every evolution reuses the same dataset so "before / after" can be demoed side by side.
 
 Conversation with the user: **French**. Code, comments, agent and rule files: **English**. UI strings: **French**.
 
 ## Stack
 
-Angular 22 (standalone, zoneless, signals) · TypeScript 6 (maximum strictness) · SCSS with design tokens + utility classes · Chart.js · Vitest + jsdom · ESLint (angular-eslint, flat config) · npm.
+Angular 22 (standalone, zoneless, signals) · Angular Material 22 (Material 3 theme, light/dark) · TypeScript 6 (maximum strictness) · SCSS utilities on Material system variables · Chart.js · Vitest + jsdom · ESLint (angular-eslint, flat config) · npm.
 
 Standards: **read `docs/STANDARD.md` before any code-related task** — single source of truth, never restated elsewhere.
 
@@ -21,7 +21,7 @@ The main thread is the **orchestrator**: it analyzes the request, plans, delegat
 
 | Agent        | Domain                                                    | Writes                                  |
 | ------------ | --------------------------------------------------------- | --------------------------------------- |
-| `code-agent` | Production code — creation, fixes, refactoring, mocks     | `src/**` except `*.spec.ts`, `src/testing/**` |
+| `code-agent` | Production code — creation, fixes, refactoring, dataset   | `src/**` except `*.spec.ts`, `src/testing/**` |
 | `test-agent` | Unit tests — creation, repair, coverage                   | `*.spec.ts`, `src/testing/**`           |
 
 ### Routing
@@ -36,7 +36,7 @@ Brief agents with intent + scope only (files, expected behavior, constraints fro
 ### Exceptions — the main thread acts directly
 
 - **Conversational**: question, opinion, explanation, planning — no artifact produced.
-- **Mechanical micro-fix**: ≤ 2 files, location and correct form already known (typo, import path, constant, missing `data-cy`). The main thread still reads the matching rule and runs `npm run typecheck` before yielding. Never covers tests.
+- **Mechanical micro-fix**: ≤ 2 files, location and correct form already known (typo, import path, constant, missing `data-testid`). The main thread still reads the matching rule and runs `npm run typecheck` before yielding. Never covers tests.
 
 ### Agent replies
 
@@ -64,11 +64,12 @@ When the gate runs — once per strategic moment, never in a loop:
 | Moment                       | Who                     | Gate                                            |
 | ---------------------------- | ----------------------- | ----------------------------------------------- |
 | While coding                 | `code-agent`            | `npm run typecheck` only (≈ 2 s)                |
-| `code-agent` finishes        | Stop hook (automatic)   | `npm run validate` — lint + typecheck + build   |
-| `test-agent` finishes        | Stop hook (automatic)   | `npm run check` — full gate                     |
+| `code-agent` finishes        | `code-agent`, once      | `npm run validate` — lint + typecheck + build   |
+| `test-agent` finishes        | `test-agent`, once      | `npm run check` — full gate                     |
+| Agent stops                  | Stop hook (safety net)  | same gate — instant when the tree is unchanged since the last green run |
 | Before reporting to the user | main thread             | `npm run check` — skipped if `test-agent` just passed it on the same tree |
 
-The Stop hook (`.claude/hooks/require-green.sh`) is skipped when the working tree is identical to the last green run, and lets the agent stop on its second attempt so it can report `regressed.` instead of looping. Agents never run the gate script themselves — the hook does.
+Each agent runs its gate **once**, at the end. The Stop hook (`.claude/hooks/require-green.sh`, declared in the agent frontmatter) is the safety net: it fingerprints the working tree, so after a green run it exits in milliseconds; if the agent skipped or broke the gate, it blocks the stop and feeds the errors back. It lets the agent stop on its second attempt so it can report `regressed.` instead of looping. Agent definitions (and their hooks) are loaded when the session starts: after editing `.claude/agents/*`, start a new session.
 
 Other discipline: never `--watch` in agent runs; read the Vitest summary line, not the exit code, when output is piped. When available, the main thread also checks the IDE diagnostics before reporting — some TypeScript config errors only surface there.
 
@@ -85,7 +86,7 @@ Other discipline: never `--watch` in agent runs; read the Vitest summary line, n
 | `*.dao.ts`                      | `.claude/rules/dao.md`        |
 | `*.pipe.ts`                     | `.claude/rules/pipe.md`       |
 | `src/app/models/**`, `src/app/utils/**` | `.claude/rules/model-utils.md` |
-| `src/app/mocks/**`              | `.claude/rules/mocks.md`      |
+| `src/app/data/**`               | `.claude/rules/data.md`       |
 | `*.spec.ts`, `src/testing/**`   | `.claude/rules/spec.md`       |
 
 ## Skills
@@ -93,7 +94,7 @@ Other discipline: never `--watch` in agent runs; read the Vitest summary line, n
 | Skill                    | Used by      | When                                                       |
 | ------------------------ | ------------ | ---------------------------------------------------------- |
 | `apply-design-system`    | `code-agent` | Writing or reviewing a template / SCSS                     |
-| `add-mock-endpoint`      | `code-agent` | Exposing new mocked data to the app                        |
+| `add-dataset`            | `code-agent` | Exposing new data to the app (dataset + DAO)               |
 | `validate-test-coverage` | `test-agent` | Final coverage pass and gap report                         |
 | `challenge-tests`        | `test-agent` | Auditing whether existing specs really protect behavior    |
 | `write-spec`             | main thread  | Writing a product/technical spec in `docs/` before coding  |

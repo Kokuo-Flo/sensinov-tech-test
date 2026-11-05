@@ -11,19 +11,35 @@ body {
 }
 
 body {
-  font-family: var(--font-family);
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  background: var(--color-bg);
+  font: var(--mat-sys-body-medium);
+  letter-spacing: var(--mat-sys-body-medium-tracking);
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-background);
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3,
-p {
+p,
+dl,
+dd,
+ol {
   margin: 0;
 }
 
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 a {
-  color: var(--color-info);
+  color: var(--mat-sys-primary);
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--mat-sys-on-primary-container);
 }

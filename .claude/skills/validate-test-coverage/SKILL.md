@@ -24,9 +24,9 @@ The ≥ 80 % threshold applies to files **created or modified in the task**, all
 | Gap                                    | Action                                          |
 | -------------------------------------- | ----------------------------------------------- |
 | Uncovered branch in a service/util     | One test per branch condition                   |
-| Uncovered error path                   | Test the HTTP error / empty / missing-value case |
-| Uncovered component interaction       | Render + trigger via `data-cy`, assert the effect |
-| Uncovered mock generator branch        | Assert the anomaly or defect it injects         |
+| Uncovered error path                   | Test the not-found / empty / missing-value case  |
+| Uncovered component interaction       | Render + trigger via `data-testid`, assert the effect |
+| Uncovered dataset generator branch     | Assert the anomaly or defect it injects         |
 
 Bootstrap files (`main.ts`, `app.config.ts`, `app.routes.ts`) are not gaps.
 

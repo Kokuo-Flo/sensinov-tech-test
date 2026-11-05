@@ -30,7 +30,7 @@ A spec must be implementable: if it cannot become a task list for `code-agent` a
 <2–4 sentences, then the screens / flows.>
 
 ### Contrat de données
-<TypeScript interfaces of new or changed models, mock endpoints (`GET /api/...`).>
+<TypeScript interfaces of new or changed models, new DAO methods and the dataset they read.>
 
 ### Fichiers impactés
 | Fichier | Changement | Risque |
@@ -48,6 +48,6 @@ A spec must be implementable: if it cannot become a task list for `code-agent` a
 
 1. Problem in one paragraph — if you cannot, the spec is premature.
 2. Goals as verifiable outcomes, not activities.
-3. Data contract before screens: the mock endpoint and models drive the rest.
+3. Data contract before screens: the models and DAO methods drive the rest.
 4. Record every trade-off in **Arbitrages** — they are the talking points of the demo.
 5. Specs are written in French (product audience); identifiers stay in English.

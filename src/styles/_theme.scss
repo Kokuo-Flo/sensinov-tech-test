@@ -1,0 +1,70 @@
+// Single source of truth for every color, font, radius and shadow of the app: Angular Material
+// emits them as `--mat-sys-*` system variables, consumed by Material components, `_base.scss`,
+// `_utilities.scss`, component stylesheets and the chart (resolved at runtime).
+@use 'sass:map';
+@use '@angular/material' as mat;
+@use 'theme-colors';
+
+$_neutral: map.get(theme-colors.$primary-palette, neutral);
+$_font-family: ('Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif);
+
+html {
+  color-scheme: light;
+
+  // `color-scheme` theme type: every color is a `light-dark(light, dark)` pair resolved by the
+  // `color-scheme` of `<html>`, switched by `DARK_THEME_CLASS`.
+  @include mat.theme(
+    (
+      color: (
+        primary: theme-colors.$primary-palette,
+        tertiary: theme-colors.$tertiary-palette,
+        theme-type: color-scheme,
+      ),
+      typography: (
+        plain-family: $_font-family,
+        brand-family: $_font-family,
+        bold-weight: 700,
+        medium-weight: 600,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+
+  // Light: a warm sand app background under near-white surfaces (cards, toolbar, tables).
+  @include mat.theme-overrides(
+    (
+      background: map.get($_neutral, 94),
+    )
+  );
+
+  // Raw data tables: muted headers, compact rows, quiet separators.
+  @include mat.table-overrides(
+    (
+      header-headline-color: var(--mat-sys-on-surface-variant),
+      row-item-outline-color: var(--mat-sys-outline-variant),
+      header-container-height: 48px,
+      row-item-container-height: 44px,
+    )
+  );
+}
+
+// Dark: a near-black warm charcoal background (not pure black), surfaces a few steps lighter.
+// Text keeps the generated `on-surface` (neutral 90) / `on-surface-variant` (neutral-variant 80):
+// both stay above WCAG AA on every surface below.
+html.app-dark {
+  color-scheme: dark;
+
+  @include mat.theme-overrides(
+    (
+      background: #121211,
+      surface: #1b1a18,
+      surface-dim: #121211,
+      surface-container-lowest: #0e0d0c,
+      surface-container-low: #1f1e1b,
+      surface-container: #232220,
+      surface-container-high: #2a2926,
+      surface-container-highest: #33312e,
+    )
+  );
+}

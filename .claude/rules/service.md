@@ -7,7 +7,7 @@ paths:
 
 ## Role
 
-Services own **business logic and state**. They coordinate DAOs and expose read-only signals to components. They never call `HttpClient` directly and never touch the DOM.
+Services own **business logic and state**. They coordinate DAOs and expose read-only signals to components. They never import the dataset (`#data/*`) directly and never touch the DOM.
 
 ## Skeleton
 
@@ -27,9 +27,9 @@ export class BuildingService {
 
   public readonly buildings: Signal<Building[]> = this._buildingsResource.value;
   public readonly isLoading: Signal<boolean> = this._buildingsResource.isLoading;
-  public readonly problem = computed<ApiProblem | null>(() => {
+  public readonly problem = computed<DataProblem | null>(() => {
     const error = this._buildingsResource.error();
-    return error === undefined ? null : toApiProblem(error);
+    return error === undefined ? null : toDataProblem(error);
   });
   public readonly selectedBuilding = computed(
     () => this.buildings().find((building: Building) => building.id === this._selectedId()) ?? null,
@@ -45,10 +45,10 @@ export class BuildingService {
 
 - **Writable signals are private**; expose `asReadonly()` or a `computed()`.
 - Derived state is `computed()`, never a second signal synced by hand.
-- HTTP → `rxResource()` / `toSignal()` at the service boundary; components consume signals only.
-- **Errors**: normalize with `toApiProblem()` and expose an `ApiProblem | null` signal. Decide on `problem.type` / `problem.status` (e.g. `not-found` → empty state), never on parsing `detail`. Turning a problem into a French message is the view's job (pipe or component map), not the service's.
-- Long-lived subscriptions: `takeUntilDestroyed(this._destroyRef)`. One-shot HTTP calls and `take(1)` are exempt.
+- DAO `Observable`s → `rxResource()` / `toSignal()` at the service boundary; components consume signals only.
+- **Errors**: normalize with `toDataProblem()` and expose a `DataProblem | null` signal. Decide on `problem.type` (e.g. `not-found` → empty state), never on parsing `detail`. Turning a problem into a French message is the view's job (pipe or component map), not the service's.
+- Long-lived subscriptions: `takeUntilDestroyed(this._destroyRef)`. One-shot DAO calls and `take(1)` are exempt.
 - **No timing hacks** (`setTimeout`, `queueMicrotask`, `Promise.resolve().then()`, `requestAnimationFrame`).
-- **No DOM access** (`document.*`, `ElementRef.nativeElement` mutations).
+- **No DOM access** (`document.*`, `ElementRef.nativeElement` mutations). Single documented exception: `ThemeService` toggles the theme class on `<html>` via `inject(DOCUMENT)` — do not add others.
 - Pure computations with no dependency on state belong in `utils/` (testable without TestBed) — the service calls them.
 - Companion service (single consumer) lives next to its component; shared services live in `src/app/services/`.

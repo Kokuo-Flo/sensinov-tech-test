@@ -12,17 +12,17 @@ src/
 ├── app/
 │   ├── components/     UI components — one folder per component (routed pages included)
 │   ├── services/       App-level services: business logic + state, shared by several components
-│   ├── dao/            Data access — HTTP only, one DAO per backend resource
+│   ├── dao/            Data access — the single seam to the dataset, one DAO per resource
 │   ├── models/         Types, interfaces, constants, pure functions on those types
-│   ├── pipes/          Pure presentation transforms shared by several templates
+│   ├── pipes/          Pure presentation transforms (labels, formats) — all pipes live here
 │   ├── directives/     Attribute directives shared by several components
 │   ├── utils/          Cross-cutting pure functions (no DI, no state)
-│   ├── mocks/          Fake backend (interceptor + data generators) — THROWAWAY MOCK
+│   ├── data/           In-memory deterministic dataset (reference tables, measurement generator) — the only data source
 │   ├── app.component.* Shell (header + router outlet)
 │   ├── app.config.ts   Root providers
 │   └── app.routes.ts   Route table
 ├── assets/             Static files copied as-is, served under /assets/ (favicon, images)
-├── styles/             Design tokens, base styles, utility classes
+├── styles/             Material 3 theme (single source of truth), spacing/layout tokens, base styles, utilities
 └── testing/            Test-only helpers (never imported by production code)
 ```
 
@@ -32,20 +32,21 @@ src/
 - **Companion service**: a service consumed by a **single** component lives next to it (`components/<name>/<name>.service.ts`). As soon as a second consumer appears, move it to `services/`.
 - **DAO**: always `dao/<resource>.dao.ts`. A DAO is not a service.
 - **Types**: always `models/<concept>.model.ts`, one file per domain concept. No type declared in a component, service or DAO file except private, file-local helper types.
-- **Pipes / directives**: `pipes/<name>.pipe.ts`, `directives/<name>.directive.ts` when shared; next to the owner when single-consumer.
+- **Pipes**: always `pipes/<name>.pipe.ts`, even with a single consumer — labels and formats are reused as soon as a second screen shows the same data.
+- **Directives**: `directives/<name>.directive.ts` when shared; next to the owner when single-consumer.
 - **Utils**: pure functions in `utils/<name>.utils.ts`. Anything that needs DI or holds state is a service.
 
 ### Data flow
 
 ```
-Component  ──calls──▶  Service (state: signals, business logic)  ──calls──▶  DAO (HttpClient)  ──▶  /api/*
-    ▲                          │                                                                   │
-    └──── reads signals ───────┘                                    mocks/ interceptor answers ◀───┘
+Component  ──calls──▶  Service (state: signals, business logic)  ──calls──▶  DAO (Observable<T>)  ──reads──▶  data/
+    ▲                          │
+    └──── reads signals ───────┘
 ```
 
-- Components never inject a DAO or `HttpClient`.
-- Services never inject `HttpClient`.
-- The mock backend is an HTTP interceptor: swapping to a real API means removing it, nothing else changes.
+- There is no backend: `data/` is an in-memory, deterministic dataset and the only data source.
+- Components never inject a DAO; only DAOs import `#data/*`.
+- DAOs return `Observable<T>`: plugging a real API one day means rewriting the DAOs, nothing else changes.
 
 ---
 
@@ -88,7 +89,7 @@ Consequences in code:
 
 - **No `any`**, no `as any`, no `$any()` in templates, no non-null assertion `!`. If the right type is not reachable, stop and raise it.
 - `unknown` for values of unknown shape, narrowed with a type guard (`value is T`) living in `models/`.
-- **API contract**: a success carries the bare payload `T` (no envelope); an error carries the real HTTP status and an RFC 9457 Problem Details body, typed `ApiProblem` (`models/api.model.ts`). Any caught error is normalized once with `toApiProblem()` (`utils/http-error.utils.ts`); the UI maps `problem.type` to a French message — the backend never dictates UI copy.
+- **Data contract**: a DAO emits the bare payload `T` (no envelope) or fails with a `DataProblemError` carrying a `DataProblem` (`models/data-problem.model.ts`: `type` among `not-found`, `invalid-metric`, `unknown-error`). Services normalize any caught error once with `toDataProblem()` (`utils/data-problem.utils.ts`); the UI maps `problem.type` to a French message (`problemMessage` pipe).
 - **Explicit access modifier** (`public` / `protected` / `private`) on every class member.
 
 ### Dependency injection
@@ -132,17 +133,17 @@ Consequences in code:
 
 ### State & reactivity
 
-- **Signals** (`signal`, `computed`, `linkedSignal`) for state, **RxJS** for async streams (HTTP), bridged with `toSignal()` / `rxResource()` at the service boundary.
+- **Signals** (`signal`, `computed`, `linkedSignal`) for state, **RxJS** for async streams (DAO results), bridged with `toSignal()` / `rxResource()` at the service boundary.
 - Derivable state is a `computed()`, never a second `signal()` kept in sync by hand.
 - `computed()` over getters — always.
-- Long-lived subscriptions use `takeUntilDestroyed()`; HTTP one-shots and `take(1)` are exempt.
+- Long-lived subscriptions use `takeUntilDestroyed()`; one-shot DAO calls and `take(1)` are exempt.
 - No timing hacks (`setTimeout`, `queueMicrotask`, `Promise.resolve().then()`) to work around change detection.
+- No DOM access in services — **single documented exception**: `ThemeService` sets the theme class on `<html>` via `inject(DOCUMENT)`.
 
 ### Comments
 
 - English only, and only where the code is not self-explanatory (non-trivial algorithm, workaround, counter-intuitive decision).
 - Never paraphrase code, never decorative section banners beyond the member-ordering section comments, never ticket numbers.
-- `THROWAWAY MOCK` tag on every file of `src/app/mocks/`.
 
 ---
 
@@ -151,20 +152,32 @@ Consequences in code:
 - Standalone (default). **OnPush is the default change detection in Angular 22: never declare `changeDetection`** — enforced by ESLint. Components rely on signals for every value the template reads.
 - **Minimal logic**: inject services, expose their signals, implement user actions that delegate. Business rules, aggregation, formatting logic → service, util or pipe.
 - No `CommonModule`; import the exact primitives needed.
+- **UI kit: Angular Material** (MIT). Use a Material component whenever one exists for the need (`mat-table` + `matSort`, `mat-select`, `mat-button-toggle-group`, `mat-slide-toggle`, `mat-card`, `mat-toolbar`, `mat-progress-bar`…), imported per component. Build a local component only when Material has none (e.g. `sb-breadcrumb`).
+- **Third-party rendering libraries** (Chart.js) are constructed behind an injection token / factory (`LINE_CHART_FACTORY`), so components stay testable in jsdom with a fake.
 
 ## Templates
 
 - Built-in control flow only: `@if`, `@for` (with `track` on a stable id), `@switch`, `@let`, `@defer`.
 - No calculations or chained expressions in templates — expose a `computed()`.
 - `[class.x]` / `[style.x]` — never `ngClass` / `ngStyle`.
-- `data-cy` on every interactive or asserted element.
+- `data-testid` on every interactive or asserted element.
+- **Typed table rows**: Material cell templates are untyped (`TemplateRef<any>`). Use the long form with the typing directive: `<ng-template matCellDef let-building [sbTemplateItemOf]="buildings()">`. The shorthand `*matCellDef="let x"` is forbidden when `x` is read.
 - **UI language: French.** Strings live in templates (single-language POC — no i18n framework).
 
-## Styling
+## Styling — one source of truth
 
-- Design tokens (`src/styles/_tokens.scss`) as CSS variables — never hardcode colors, spacing, font sizes or radii.
-- **Utility-first**: use classes from `src/styles/_utilities.scss` in templates before writing SCSS.
-- Component `.scss` contains only what utilities cannot express (grid templates, fixed dimensions, animations), with BEM naming.
+| Concern                                                    | Owner (only place it is defined)                                   | Consumed as                          |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------ |
+| Colors, typography, radii, elevation, light & dark schemes | Material 3 theme: `src/styles/_theme.scss` + generated `_theme-colors.scss` | `--mat-sys-*` CSS variables          |
+| Material component tweaks                                  | `mat.*-overrides()` mixins in `_theme.scss`                        | —                                    |
+| Spacing scale, layout sizes, motion durations              | `src/styles/_tokens.scss`                                          | `--space-*`, `--size-*`, `--motion-*` |
+| Reusable layout/typography/color helpers                   | `src/styles/_utilities.scss` (built on the two above)              | utility classes in templates         |
+
+- **No color literal** (hex, rgb, hsl, named color) anywhere in `src/` outside `_theme.scss` / `_theme-colors.scss`. A new color need = a Material system variable, or an override in `_theme.scss` — never a local value.
+- **Dark mode**: theme type `color-scheme` (every color is a `light-dark()` pair). `ThemeService` toggles the `app-dark` class on `<html>`, which switches `color-scheme` and applies the dark surface overrides (background ≈ `#121211`, never pure black). Never style dark mode per component.
+- **Utility-first**: use `_utilities.scss` classes in templates before writing SCSS (layout, spacing, `text-*`, `tag`, `callout`, `cell-numeric`…).
+- Component `.scss` contains only what utilities cannot express (grid templates, fixed dimensions, animations), with BEM naming and `--mat-sys-*` / tokens only.
+- Canvas-based rendering (charts) reads colors from `--mat-sys-*` at runtime (computed style) and re-reads them when the theme mode changes.
 
 ---
 
@@ -172,8 +185,8 @@ Consequences in code:
 
 - **Vitest** through `ng test` (zoneless, jsdom).
 - Service mocks via `provideServiceMock()` / `provideServiceMocks()` from `#testing/service-mock`.
-- HTTP via `provideHttpClient()` + `provideHttpClientTesting()` and `HttpTestingController`.
-- DOM queries via `[data-cy="…"]` only.
+- DAOs tested against the real dataset (known ids, not-found / invalid-metric errors); services get mocked DAOs.
+- DOM queries via `[data-testid="…"]` only.
 - Coverage target ≥ 80 % on new or modified code.
 - Every assertion could fail if the behavior regressed — see `.claude/rules/spec.md`.
 

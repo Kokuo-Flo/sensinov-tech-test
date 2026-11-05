@@ -2,3 +2,33 @@
   display: block;
   height: 100%;
 }
+
+.app-shell__bar,
+.app-shell__content {
+  max-width: var(--size-content-max-width);
+  margin-inline: auto;
+}
+
+.app-shell__brand {
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.app-shell__nav-link {
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+  transition:
+    background-color var(--motion-duration-short),
+    color var(--motion-duration-short);
+
+  &:hover {
+    color: var(--mat-sys-on-surface);
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.app-shell__nav-link--active,
+.app-shell__nav-link--active:hover {
+  color: var(--mat-sys-on-secondary-container);
+  background: var(--mat-sys-secondary-container);
+}

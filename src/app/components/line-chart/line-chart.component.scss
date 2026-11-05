@@ -1,0 +1,9 @@
+:host {
+  display: block;
+}
+
+// Chart.js sizes the canvas from its parent: a dedicated, positioned box of fixed height.
+.line-chart {
+  position: relative;
+  height: var(--size-chart-height);
+}

@@ -1,6 +1,6 @@
 ---
 name: code-agent
-description: Implements or refactors production code (components, services, DAOs, pipes, models, utils, mock backend, styles). Use for any feature, bug fix or cleanup touching src/** outside of specs and test helpers.
+description: Implements or refactors production code (components, services, DAOs, pipes, models, utils, dataset, styles). Use for any feature, bug fix or cleanup touching src/** outside of specs and test helpers.
 tools: Read, Write, Edit, Bash, Grep, Glob, Skill
 model: opus
 hooks:
@@ -33,21 +33,21 @@ You implement and refactor production code of this Angular 22 application with m
 2. **Plan** the behavioral delta and the exact files to create or change. Place each file per `docs/STANDARD.md` › Placement rules (by type; companion service next to its single consumer).
 3. **Implement** the smallest change that delivers the behavior at its root cause. Keep components thin: logic goes to a service, a util or a pipe.
    - Template / SCSS work → load the `apply-design-system` skill.
-   - New mocked data or endpoint → load the `add-mock-endpoint` skill.
+   - New data exposed to the app → load the `add-dataset` skill.
    - Generate scaffolding with the CLI when it helps (`npx ng generate component components/<name>`), then conform the output to the rules.
 4. **Iterate** with `npm run typecheck` only — no `npm test`, no `ng build`, no manual lint mid-iteration.
-5. **Finish** with `npm run lint:fix` (autofix only — do not run `validate` yourself). When you stop, a **Stop hook runs `npm run validate`** (lint with 0 warnings + typecheck + build with 0 warnings). If it fails, its output comes back to you: fix every reported issue and stop again. Never work around the gate.
+5. **Finish** with `npm run lint:fix`, then run `npm run validate` **once** (lint with 0 warnings + typecheck + build with 0 warnings) and fix everything it reports. When you stop, the Stop hook re-checks the same gate (instant if nothing changed since your green run) and sends any failure back to you. Never work around the gate.
 6. **Self-audit** the diff against the checklist below, then report.
 
 ## Delivery checklist (sections matching touched files only)
 
 - `*.component.ts`: no `changeDetection` declared (OnPush default) · signal APIs · member/inject ordering · no business logic · `computed()` not getters
-- `*.component.html`: built-in control flow · `track` by id · no logic · `data-cy` on interactive/asserted elements · French strings
+- `*.component.html`: built-in control flow · `track` by id · no logic · `data-testid` on interactive/asserted elements · French strings
 - `*.scss`: utilities first · tokens only · BEM · nothing a utility already covers
-- `*.service.ts`: private writable signals · derived = `computed()` · errors → `toApiProblem()` + `ApiProblem | null` signal · no `HttpClient` · no timing hacks · no DOM
-- `*.dao.ts`: HTTP only · `Observable<T>` (no envelope) · errors propagate · `API_BASE_URL`
+- `*.service.ts`: private writable signals · derived = `computed()` · errors → `toDataProblem()` + `DataProblem | null` signal · never imports `#data/*` · no timing hacks · no DOM
+- `*.dao.ts`: only importer of `#data/*` · `Observable<T>` (no envelope) · failures → `DataProblemError` · errors propagate
 - `models/`, `utils/`: types/consts/pure functions only · no `enum` · explicit units
-- `mocks/`: `THROWAWAY MOCK` header · deterministic seed · anomalies documented
+- `data/`: deterministic seed · identical output after refactor · anomalies documented · types in `models/`
 - Every TS file: explicit access modifiers · `_` prefix on private · typed callback params · no unused import · `#` aliases for parent folders
 
 ## Output contract

@@ -1,30 +1,8 @@
+// What Angular Material does not own: spacing scale, layout sizes, motion. Colors, typography,
+// radii and shadows are Material system variables (`--mat-sys-*`, see `_theme.scss`).
 :root {
-  --color-primary: #1f6f5c;
-  --color-primary-contrast: #ffffff;
-  --color-success: #2e7d32;
-  --color-warning: #b26a00;
-  --color-danger: #c62828;
-  --color-info: #1565c0;
-
-  --color-text: #1d2433;
-  --color-text-muted: #5b6474;
-  --color-text-subtle: #8a93a3;
-
-  --color-bg: #f4f6f8;
-  --color-surface: #ffffff;
-  --color-surface-alt: #eef1f4;
-  --color-border: #d9dee5;
-
-  --font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.25rem;
-  --font-size-xl: 1.5rem;
-  --font-weight-regular: 400;
-  --font-weight-semibold: 600;
-
   --space-0: 0;
+  --space-2xs: 2px;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -32,7 +10,8 @@
   --space-xl: 24px;
   --space-2xl: 32px;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 8%);
+  --size-content-max-width: 1200px;
+  --size-chart-height: 320px;
+
+  --motion-duration-short: 150ms;
 }

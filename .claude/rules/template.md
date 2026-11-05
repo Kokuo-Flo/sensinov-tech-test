@@ -12,9 +12,9 @@ paths:
   <p class="text-muted">Chargement…</p>
 } @else {
   @for (building of buildings(); track building.id) {
-    <sb-building-card [building]="building" data-cy="building-card" />
+    <sb-building-card [building]="building" data-testid="building-card" />
   } @empty {
-    <p class="text-muted" data-cy="building-list-empty">Aucun bâtiment</p>
+    <p class="text-muted" data-testid="building-list-empty">Aucun bâtiment</p>
   }
 }
 @let selected = selectedBuilding();
@@ -23,6 +23,18 @@ paths:
 - `@for` always tracks a stable identity (`item.id`), never `$index` unless the list is static.
 - `@defer` (with `@placeholder`) for heavy, below-the-fold content such as charts.
 - Never `*ngIf`, `*ngFor`, `*ngSwitch`, `ngClass`, `ngStyle`.
+
+## Angular Material
+
+- Prefer the Material component for the need: `mat-table` + `matSort` (tables), `mat-select`, `mat-button-toggle-group`, `mat-slide-toggle`, `mat-card`, `mat-progress-bar` (loading), `mat-toolbar`. Import each module/component in the component's `imports`, nothing global.
+- **Typed rows**: Material cell templates are `TemplateRef<any>`. When a row variable is read, use the long form with the typing directive:
+  ```html
+  <td mat-cell *matCellDef="let row"></td>                              <!-- ❌ row is any -->
+  <ng-template matCellDef let-building [sbTemplateItemOf]="buildings()"> <!-- ✅ building: Building -->
+    <td mat-cell>{{ building.name }}</td>
+  </ng-template>
+  ```
+- Status regions: loading → `role="status"` + `aria-busy` + screen-reader text (`sr-only`), error → `role="alert"` in a `callout callout--error`.
 
 ## No logic in templates
 
@@ -43,7 +55,7 @@ Reading signals and calling event handlers is fine. Calculations, ternary chains
 
 ## Testability
 
-`data-cy="kebab-case-name"` on every interactive element and every element a test asserts on (titles, counters, list items, empty states).
+`data-testid="kebab-case-name"` on every interactive element and every element a test asserts on (titles, counters, list items, empty states).
 
 ## Language & accessibility
 

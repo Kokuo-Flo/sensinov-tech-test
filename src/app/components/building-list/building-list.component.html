@@ -1,0 +1,73 @@
+<section class="flex flex-column gap-xl">
+  <h1 class="text-title" data-testid="building-list-title">Bâtiments</h1>
+
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      @if (isLoading()) {
+        <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="building-list-loading">
+          <span class="sr-only">Chargement…</span>
+          <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+        </div>
+      } @else if (problem(); as problem) {
+        <p class="callout callout--error" role="alert" data-testid="building-list-error">{{ problem | problemMessage }}</p>
+      } @else {
+        <div class="overflow-auto">
+          <table
+            mat-table
+            [dataSource]="sortedBuildings()"
+            matSort
+            matSortActive="name"
+            matSortDirection="asc"
+            (matSortChange)="onSortChange($event)"
+            data-testid="building-table"
+          >
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Nom</th>
+              <ng-template matCellDef let-building [sbTemplateItemOf]="sortedBuildings()">
+                <td mat-cell>
+                  <a [routerLink]="['/buildings', building.id]" class="text-strong" data-testid="building-link">{{ building.name }}</a>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="city">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Ville</th>
+              <ng-template matCellDef let-building [sbTemplateItemOf]="sortedBuildings()">
+                <td mat-cell data-testid="building-city">{{ building.city }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="countryName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Pays</th>
+              <ng-template matCellDef let-building [sbTemplateItemOf]="sortedBuildings()">
+                <td mat-cell>
+                  <span class="tag tag--neutral" data-testid="building-country">{{ building.countryName }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="surfaceM2">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="cell-numeric">Surface</th>
+              <ng-template matCellDef let-building [sbTemplateItemOf]="sortedBuildings()">
+                <td mat-cell class="cell-numeric text-nowrap" data-testid="building-surface">{{ building.surfaceM2 | number }} m²</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="constructionYear">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="cell-numeric">Année de construction</th>
+              <ng-template matCellDef let-building [sbTemplateItemOf]="sortedBuildings()">
+                <td mat-cell class="cell-numeric" data-testid="building-year">{{ building.constructionYear }}</td>
+              </ng-template>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="COLUMNS"></tr>
+            <tr mat-row *matRowDef="let row; columns: COLUMNS" data-testid="building-row"></tr>
+            <tr *matNoDataRow>
+              <td [attr.colspan]="COLUMNS.length" class="px-lg py-md text-muted" data-testid="building-list-empty">Aucun bâtiment.</td>
+            </tr>
+          </table>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

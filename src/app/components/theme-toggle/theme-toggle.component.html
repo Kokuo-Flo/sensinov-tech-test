@@ -1,0 +1,9 @@
+<mat-slide-toggle
+  [checked]="isDarkTheme()"
+  (change)="onToggleTheme()"
+  [aria-label]="toggleLabel()"
+  labelPosition="before"
+  data-testid="theme-toggle"
+>
+  <span class="text-muted text-caption"> Thème sombre </span>
+</mat-slide-toggle>

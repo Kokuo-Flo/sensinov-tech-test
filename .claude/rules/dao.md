@@ -7,34 +7,27 @@ paths:
 
 ## Role
 
-A DAO owns the HTTP layer of one backend resource: URL building, raw call, response typing. No business logic, no state, no signals, no `subscribe()`.
+A DAO is the **single seam** between the app and its data source — today the in-memory dataset (`#data/*`). It looks entities up and returns them typed. No business logic, no state, no signals, no `subscribe()`. To plug a real API one day, only the DAOs change.
 
 ## Skeleton
 
 ```typescript
 @Injectable({ providedIn: 'root' })
 export class BuildingDao {
-  // --- Injections ---
-  private readonly _http = inject(HttpClient);
-
-  // --- Constants ---
-  private readonly _baseUrl = `${API_BASE_URL}/buildings`;
-
-  public getAll(): Observable<Building[]> {
-    return this._http.get<Building[]>(this._baseUrl);
+  public getAll(): Observable<readonly Building[]> {
+    return of(BUILDINGS);
   }
 
   public getById(buildingId: string): Observable<Building> {
-    return this._http.get<Building>(`${this._baseUrl}/${buildingId}`);
+    const building = findBuilding(buildingId);
+    return building === null ? throwError(() => notFound('Building', buildingId)) : of(building);
   }
 }
 ```
 
 ## Rules
 
-- Every method returns `Observable<T>` — the bare payload. There is no response envelope: success/failure is the HTTP status.
-- Errors are **not** caught in the DAO: the `HttpErrorResponse` (Problem Details body) propagates to the service, which normalizes it with `toApiProblem()`.
-- URLs are built from `API_BASE_URL` (`#models/api.model`) — never a hardcoded host.
-- Query parameters through `HttpParams` / the `params` option, never string concatenation.
-- Only `HttpClient` is injected.
-- Mapping to domain types beyond typing the payload (aggregation, unit conversion) belongs to the service.
+- Every method returns `Observable<T>`, so services keep the same `rxResource()` code whatever the source.
+- A failure is a thrown `DataProblemError` (`notFound(…)`, `invalidMetric(…)` factories from `#utils/data-problem.utils`), never `null` or a sentinel value. Errors are not caught in the DAO: the service normalizes them with `toDataProblem()`.
+- DAOs are the only files importing `#data/*`.
+- Mapping to domain types beyond lookup and range selection (aggregation, unit conversion) belongs to a service or util.

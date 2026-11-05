@@ -1,0 +1,5 @@
+// Separator drawn in CSS: decorative, kept out of the link text.
+.breadcrumb__item + .breadcrumb__item::before {
+  content: '/';
+  color: var(--mat-sys-outline);
+}

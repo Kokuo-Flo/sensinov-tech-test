@@ -25,6 +25,7 @@ $spaces: (
 .justify-center { justify-content: center; }
 .justify-between { justify-content: space-between; }
 .justify-end { justify-content: flex-end; }
+.ml-auto { margin-left: auto; }
 
 // Spacing: gap-*, p-*, px-*, py-*, m-*, mt-*, mb-*
 @each $name, $value in $spaces {
@@ -43,29 +44,68 @@ $spaces: (
 .overflow-auto { overflow: auto; }
 .overflow-hidden { overflow: hidden; }
 
-// Typography
-.text-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); }
-.text-heading { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
-.text-body { font-size: var(--font-size-sm); }
-.text-caption { font-size: var(--font-size-xs); }
-.text-strong { font-weight: var(--font-weight-semibold); }
+// Typography — Material type scale (`--mat-sys-*`, `_theme.scss`)
+.text-title { font: var(--mat-sys-headline-small); font-weight: var(--mat-sys-title-medium-weight); letter-spacing: -0.01em; }
+.text-heading { font: var(--mat-sys-title-large); font-weight: var(--mat-sys-title-medium-weight); }
+.text-body { font: var(--mat-sys-body-medium); }
+.text-caption { font: var(--mat-sys-body-small); }
+.text-strong { font-weight: var(--mat-sys-title-medium-weight); }
 .text-right { text-align: right; }
 .text-center { text-align: center; }
 .text-nowrap { white-space: nowrap; }
 
-// Colors
-.text-muted { color: var(--color-text-muted); }
-.text-subtle { color: var(--color-text-subtle); }
-.text-primary { color: var(--color-primary); }
-.text-success { color: var(--color-success); }
-.text-warning { color: var(--color-warning); }
-.text-danger { color: var(--color-danger); }
-.bg-surface { background: var(--color-surface); }
-.bg-surface-alt { background: var(--color-surface-alt); }
+// Colors — Material system variables only (`_theme.scss`)
+.text-muted { color: var(--mat-sys-on-surface-variant); }
+.text-primary { color: var(--mat-sys-primary); }
+.bg-surface { background: var(--mat-sys-surface); }
 
 // Surfaces
-.border { border: 1px solid var(--color-border); }
-.border-bottom { border-bottom: 1px solid var(--color-border); }
-.rounded { border-radius: var(--radius-md); }
-.shadow { box-shadow: var(--shadow-sm); }
+.border { border: 1px solid var(--mat-sys-outline-variant); }
+.border-bottom { border-bottom: 1px solid var(--mat-sys-outline-variant); }
+.rounded { border-radius: var(--mat-sys-corner-medium); }
 .cursor-pointer { cursor: pointer; }
+
+// Numeric table column: right-aligned cell, and sort header label pushed to the right.
+.cell-numeric { text-align: right; }
+.cell-numeric .mat-sort-header-container { justify-content: flex-end; }
+
+// Tag: short non-interactive label (equipment type, vendor, country, building).
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--mat-sys-corner-small);
+  font: var(--mat-sys-label-medium);
+  white-space: nowrap;
+  color: var(--mat-sys-on-primary-container);
+  background: var(--mat-sys-primary-container);
+}
+.tag--neutral {
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container-highest);
+}
+
+// Callout: error or empty-state message block.
+.callout {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--mat-sys-corner-small);
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container-high);
+}
+.callout--error {
+  color: var(--mat-sys-on-error-container);
+  background: var(--mat-sys-error-container);
+}
+
+// Accessibility: visible to screen readers only.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

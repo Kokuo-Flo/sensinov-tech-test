@@ -1,0 +1,107 @@
+<section class="flex flex-column gap-xl">
+  <sb-breadcrumb [items]="breadcrumbItems()" data-testid="building-breadcrumb" />
+
+  @if (isLoading()) {
+    <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="building-detail-loading">
+      <span class="sr-only">Chargement…</span>
+      <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+    </div>
+  } @else if (problem(); as problem) {
+    <p class="callout callout--error" role="alert" data-testid="building-detail-error">{{ problem | problemMessage: 'Bâtiment' }}</p>
+  } @else if (building(); as building) {
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-lg">
+        <h1 class="text-title" data-testid="building-name">{{ building.name }}</h1>
+        <dl class="flex flex-wrap gap-2xl" data-testid="building-summary">
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Ville</dt>
+            <dd class="text-strong" data-testid="building-city">{{ building.city }}</dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Surface</dt>
+            <dd class="text-strong text-nowrap" data-testid="building-surface">{{ building.surfaceM2 | number }} m²</dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Année de construction</dt>
+            <dd class="text-strong" data-testid="building-year">{{ building.constructionYear }}</dd>
+          </div>
+          <div class="flex flex-column gap-xs">
+            <dt class="text-muted text-caption">Étages</dt>
+            <dd class="text-strong" data-testid="building-floors">{{ building.floors }}</dd>
+          </div>
+        </dl>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-md">
+        <h2 class="text-heading">Équipements</h2>
+        <div class="overflow-auto">
+          <table
+            mat-table
+            [dataSource]="sortedEquipments()"
+            matSort
+            matSortActive="name"
+            matSortDirection="asc"
+            (matSortChange)="onSortChange($event)"
+            data-testid="equipment-table"
+          >
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Nom</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell>
+                  <a [routerLink]="['/equipments', equipment.id]" class="text-strong" data-testid="equipment-link">{{ equipment.name }}</a>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Type</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell>
+                  <span class="tag" data-testid="equipment-type">{{ equipment.type | equipmentTypeLabel }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="meterScope">
+              <th mat-header-cell *matHeaderCellDef scope="col">Périmètre</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell data-testid="equipment-scope">{{ equipment.meterScope | meterScopeLabel }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="vendor">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Fournisseur</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell>
+                  <span class="tag tag--neutral" data-testid="equipment-vendor">{{ equipment.vendor }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="zone">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col">Zone</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell data-testid="equipment-zone">{{ equipment.zone ?? '—' }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="samplingIntervalMinutes">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header scope="col" class="cell-numeric">Pas de mesure</th>
+              <ng-template matCellDef let-equipment [sbTemplateItemOf]="sortedEquipments()">
+                <td mat-cell class="cell-numeric text-nowrap" data-testid="equipment-interval">{{ equipment.samplingIntervalMinutes }} min</td>
+              </ng-template>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="COLUMNS"></tr>
+            <tr mat-row *matRowDef="let row; columns: COLUMNS" data-testid="equipment-row"></tr>
+            <tr *matNoDataRow>
+              <td [attr.colspan]="COLUMNS.length" class="px-lg py-md text-muted" data-testid="equipment-list-empty">Aucun équipement.</td>
+            </tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

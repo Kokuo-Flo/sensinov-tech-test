@@ -13,7 +13,7 @@ A component is a thin view layer. It only:
 - declares inputs / outputs / models;
 - implements user actions (`onClick*`, `onSelect*`) that **delegate** to a service.
 
-Aggregation, filtering, formatting rules, unit conversions → companion service, `utils/` or a pipe. Components never inject a DAO or `HttpClient`.
+Aggregation, filtering, formatting rules, unit conversions → companion service, `utils/` or a pipe. Components never inject a DAO.
 
 ## Skeleton
 
@@ -57,5 +57,6 @@ export class BuildingListComponent {
 - **No redundant `signal()`**: if a value can be derived from other signals, it is a `computed()` (or `linkedSignal()` when it must also be locally writable).
 - **No wrapper methods** whose body is only `return this.x`.
 - **No defensive guards in private methods** for invariants the caller already ensures; no `?.` after a type guard.
-- Imports: exact primitives (`RouterLink`, `DecimalPipe`, …), never `CommonModule`.
+- Imports: exact primitives (`RouterLink`, `DecimalPipe`, Material modules…), never `CommonModule`.
+- Third-party imperative renderers (Chart.js) are created through an injection token / factory (see `line-chart.factory.ts`), never `new Chart()` inline — the component stays testable with a fake. DOM reads/writes for them happen in `afterRenderEffect` phases, cleanup in `DestroyRef.onDestroy`.
 - Members/functions follow the ordering in `docs/STANDARD.md`.
