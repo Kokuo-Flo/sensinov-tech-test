@@ -4,10 +4,11 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { BuildingDao } from '#dao/building.dao';
 import { EquipmentDao } from '#dao/equipment.dao';
 import { type DataProblem } from '#models/data-problem.model';
-import { type Equipment, type MetricKey } from '#models/equipment.model';
+import { type Equipment, type MetricDefinition, type MetricKey } from '#models/equipment.model';
 import {
   DEFAULT_MEASUREMENT_PERIOD,
   getMeasurementPeriodRange,
+  isMeasurementPeriod,
   type MeasurementPeriod,
 } from '#models/measurement-period.model';
 import { toDataProblem } from '#utils/data-problem.utils';
@@ -36,6 +37,8 @@ export class EquipmentDetailService {
   // --- Internal signals ---
   private readonly _equipmentIdSource = signal<Signal<string> | null>(null);
   private readonly _equipmentId = computed(() => this._equipmentIdSource()?.() ?? null);
+  private readonly _requestedMetricSource = signal<Signal<string | undefined> | null>(null);
+  private readonly _requestedPeriodSource = signal<Signal<string | undefined> | null>(null);
 
   private readonly _equipmentResource = rxResource({
     params: () => this._equipmentId() ?? undefined,
@@ -60,11 +63,26 @@ export class EquipmentDetailService {
       this._equipmentDao.getMeasurements(params.equipmentId, params.metric, params.from, params.to),
   });
 
-  /** First metric of the equipment until the user picks another one; reset on equipment change. */
-  private readonly _selectedMetric = linkedSignal<MetricKey | null>(
-    () => this.equipment()?.metrics[0]?.key ?? null,
-  );
-  private readonly _selectedPeriod = signal<MeasurementPeriod>(DEFAULT_MEASUREMENT_PERIOD);
+  /**
+   * Requested metric (`?metric=`) when the equipment reports it, else its first metric, until the user
+   * picks another one; reset on equipment change.
+   */
+  private readonly _selectedMetric = linkedSignal<MetricKey | null>(() => {
+    const metrics = this.equipment()?.metrics ?? [];
+    const requested = this._requestedMetricSource()?.();
+    return (
+      metrics.find((definition: MetricDefinition) => definition.key === requested)?.key ??
+      metrics[0]?.key ??
+      null
+    );
+  });
+  /** Requested period (`?period=`) when valid, else the default one, until the user picks another one. */
+  private readonly _selectedPeriod = linkedSignal<MeasurementPeriod>(() => {
+    const requested = this._requestedPeriodSource()?.();
+    return requested !== undefined && isMeasurementPeriod(requested)
+      ? requested
+      : DEFAULT_MEASUREMENT_PERIOD;
+  });
   private readonly _series = computed(() =>
     this._seriesResource.hasValue() ? this._seriesResource.value() : null,
   );
@@ -105,6 +123,15 @@ export class EquipmentDetailService {
 
   public connect(equipmentId: Signal<string>): void {
     this._equipmentIdSource.set(equipmentId);
+  }
+
+  /** Optional `?metric=…&period=…` query parameters, so a link can open a given series directly. */
+  public connectQuery(
+    metric: Signal<string | undefined>,
+    period: Signal<string | undefined>,
+  ): void {
+    this._requestedMetricSource.set(metric);
+    this._requestedPeriodSource.set(period);
   }
 
   public selectMetric(metric: MetricKey): void {

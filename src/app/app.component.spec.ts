@@ -27,19 +27,21 @@ describe('AppComponent', () => {
     const title = root.querySelector('[data-testid="app-title"]');
 
     expect(title?.textContent?.trim()).toBe('Smart Building');
-    expect(title?.getAttribute('href')).toBe('/buildings');
+    expect(title?.getAttribute('href')).toBe('/priorities');
   });
 
-  it('should link the main navigation to buildings and reports', async () => {
+  it.each([
+    ['nav-priorities', 'Priorités', '/priorities'],
+    ['nav-buildings', 'Bâtiments', '/buildings'],
+    ['nav-findings', 'Anomalies', '/findings'],
+    ['nav-reports', 'Rapport analyste', '/reports'],
+  ])('should link %s to %s', async (testId, label, href) => {
     const root = await render();
 
-    const buildings = root.querySelector('[data-testid="nav-buildings"]');
-    const reports = root.querySelector('[data-testid="nav-reports"]');
+    const link = root.querySelector(`[data-testid="${testId}"]`);
 
-    expect(buildings?.textContent?.trim()).toBe('Bâtiments');
-    expect(buildings?.getAttribute('href')).toBe('/buildings');
-    expect(reports?.textContent?.trim()).toBe('Rapport analyste');
-    expect(reports?.getAttribute('href')).toBe('/reports');
+    expect(link?.textContent?.trim()).toBe(label);
+    expect(link?.getAttribute('href')).toBe(href);
   });
 
   it('should include the theme toggle', async () => {

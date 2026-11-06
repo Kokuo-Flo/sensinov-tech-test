@@ -97,7 +97,7 @@
               <ng-container matColumnDef="timestamp">
                 <th mat-header-cell *matHeaderCellDef scope="col">Horodatage</th>
                 <ng-template matCellDef let-point [sbTemplateItemOf]="latestPoints()">
-                  <td mat-cell class="text-nowrap" data-testid="latest-value-timestamp">{{ point.timestamp | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td mat-cell class="text-nowrap" data-testid="latest-value-timestamp">{{ point.timestamp | date: 'dd/MM/yyyy HH:mm' : LOCAL_TIMEZONE }}</td>
                 </ng-template>
               </ng-container>
 

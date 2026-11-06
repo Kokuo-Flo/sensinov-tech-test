@@ -1,9 +1,11 @@
 import { type StepClock } from '#models/building-simulation.model';
+import { LOCAL_UTC_OFFSET_HOURS } from '#models/local-time.model';
+import { MEASUREMENT_REFERENCE_INSTANT } from '#models/measurement-period.model';
 
 /** Fixed 8-week data window, Monday to Monday, never derived from `Date.now()`. */
 export const MEASUREMENT_WINDOW = {
   from: '2026-09-07T00:00:00.000Z',
-  to: '2026-11-02T00:00:00.000Z',
+  to: MEASUREMENT_REFERENCE_INSTANT,
 } as const;
 
 export const WINDOW_START_MS = Date.parse(MEASUREMENT_WINDOW.from);
@@ -22,8 +24,8 @@ export const BASE_STEP_COUNT =
 /** Number of days in the window (56). */
 export const WINDOW_DAYS = BASE_STEP_COUNT / (MINUTES_PER_DAY / BASE_STEP_MINUTES);
 
-/** Daily rhythm uses local time approximated as UTC+1 (no daylight-saving switch). */
-const LOCAL_UTC_OFFSET_MINUTES = 60;
+/** Daily rhythm uses the buildings' local time (see `local-time.model.ts`). */
+const LOCAL_UTC_OFFSET_MINUTES = LOCAL_UTC_OFFSET_HOURS * MINUTES_PER_HOUR;
 const DAYS_PER_WEEK = 7;
 /** The window starts on a Monday: day indexes 5 and 6 of each week are Saturday and Sunday. */
 const FIRST_WEEKEND_DAY_INDEX = 5;

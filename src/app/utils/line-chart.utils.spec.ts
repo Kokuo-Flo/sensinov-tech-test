@@ -137,6 +137,10 @@ describe('buildLineChartOptions', () => {
     expect(tick).toBe(formatChartTimestamp(timestamp));
   });
 
+  it('should label an axis timestamp in local time (UTC+1) whatever the runner time zone', () => {
+    expect(formatChartTimestamp(Date.parse('2026-09-07T03:00:00Z')).replace(/\s/g, ' ')).toBe('07/09 04:00');
+  });
+
   it('should label the tooltip value with the unit', () => {
     const options = buildLineChartOptions('kWh', null);
     const label = options.plugins?.tooltip?.callbacks?.label;
@@ -200,8 +204,7 @@ describe('readLineChartColors', () => {
 
 describe('formatChartTimestamp', () => {
   it('should format as French day/month hour:minute', () => {
-    // Local construction keeps the expectation independent of the runner time zone.
-    const label = formatChartTimestamp(new Date(2026, 9, 5, 14, 5).getTime());
+    const label = formatChartTimestamp(Date.parse('2026-10-05T13:05:00Z'));
 
     expect(label).toMatch(/^05\/10\D+14:05$/);
   });

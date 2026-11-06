@@ -3,6 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 
 import { BuildingDao } from '#dao/building.dao';
 import { type DataProblem } from '#models/data-problem.model';
+import { FindingService } from '#services/finding.service';
 import { toDataProblem } from '#utils/data-problem.utils';
 
 /**
@@ -13,6 +14,7 @@ import { toDataProblem } from '#utils/data-problem.utils';
 export class BuildingDetailService {
   // --- Injections ---
   private readonly _buildingDao = inject(BuildingDao);
+  private readonly _findingService = inject(FindingService);
 
   // --- Internal signals ---
   private readonly _buildingIdSource = signal<Signal<string> | null>(null);
@@ -41,6 +43,19 @@ export class BuildingDetailService {
   public readonly problem = computed<DataProblem | null>(() => {
     const error = this._buildingResource.error() ?? this._equipmentsResource.error();
     return error === undefined ? null : toDataProblem(error);
+  });
+
+  /** Findings detected on the building; `null` while the detection runs or when it failed. */
+  public readonly findingCount = computed<number | null>(() => {
+    const buildingId = this._buildingId();
+    if (
+      buildingId === null ||
+      this._findingService.isLoading() ||
+      this._findingService.problem() !== null
+    ) {
+      return null;
+    }
+    return this._findingService.findingCountByBuilding().get(buildingId) ?? 0;
   });
 
   public connect(buildingId: Signal<string>): void {

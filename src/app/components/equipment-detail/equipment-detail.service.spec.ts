@@ -258,3 +258,75 @@ describe('EquipmentDetailService', () => {
     expect(service.isLoading()).toBe(false);
   });
 });
+
+describe('EquipmentDetailService query parameters', () => {
+  async function connect(
+    metric: string | undefined,
+    period: string | undefined,
+  ): Promise<{ service: EquipmentDetailService; equipmentDao: EquipmentDao }> {
+    const context = setup();
+    context.service.connectQuery(signal(metric), signal(period));
+    context.service.connect(signal('eq-1'));
+    await settle();
+    return context;
+  }
+
+  it('should open the requested metric when the equipment reports it', async () => {
+    const { service, equipmentDao } = await connect('hvac-status', undefined);
+
+    expect(service.selectedMetric()).toBe('hvac-status');
+    expect(equipmentDao.getMeasurements).toHaveBeenCalledWith(
+      'eq-1',
+      'hvac-status',
+      expect.any(String),
+      MEASUREMENT_REFERENCE_INSTANT,
+    );
+  });
+
+  it('should fall back to the first metric when the requested one is unknown to the equipment', async () => {
+    const { service } = await connect('indoor-temperature', undefined);
+
+    expect(service.selectedMetric()).toBe('active-energy');
+  });
+
+  it('should fall back to the first metric when the requested one is not a metric at all', async () => {
+    const { service } = await connect('not-a-metric', undefined);
+
+    expect(service.selectedMetric()).toBe('active-energy');
+  });
+
+  it('should open the requested period', async () => {
+    const { service, equipmentDao } = await connect(undefined, '8-weeks');
+
+    expect(service.selectedPeriod()).toBe('8-weeks');
+    expect(equipmentDao.getMeasurements).toHaveBeenCalledWith(
+      'eq-1',
+      'active-energy',
+      '2026-09-07T00:00:00.000Z',
+      MEASUREMENT_REFERENCE_INSTANT,
+    );
+  });
+
+  it('should fall back to 7 days on an invalid period', async () => {
+    const { service } = await connect(undefined, 'forever');
+
+    expect(service.selectedPeriod()).toBe('7-days');
+  });
+
+  it('should keep the defaults without query parameters', async () => {
+    const { service } = await connect(undefined, undefined);
+
+    expect(service.selectedMetric()).toBe('active-energy');
+    expect(service.selectedPeriod()).toBe('7-days');
+  });
+
+  it('should let the user pick another metric and period after a deep link', async () => {
+    const { service } = await connect('hvac-status', '8-weeks');
+
+    service.selectMetric('active-energy');
+    service.selectPeriod('4-weeks');
+
+    expect(service.selectedMetric()).toBe('active-energy');
+    expect(service.selectedPeriod()).toBe('4-weeks');
+  });
+});

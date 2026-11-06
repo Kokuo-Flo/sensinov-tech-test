@@ -1,0 +1,164 @@
+<section class="flex flex-column gap-xl">
+  <div class="flex flex-column gap-xs">
+    <h1 class="text-title" data-testid="findings-title">Anomalies</h1>
+    <p class="text-muted">Détectées automatiquement dans les mesures des 8 dernières semaines.</p>
+  </div>
+
+  @if (buildingFilter(); as filter) {
+    <p class="flex flex-wrap items-center gap-sm" data-testid="findings-filter">
+      <span class="text-muted">Bâtiment</span>
+      <span class="tag" data-testid="findings-filter-building">{{ filter.name }}</span>
+      <a routerLink="/findings" class="text-strong" data-testid="findings-filter-clear">Voir tout le parc</a>
+    </p>
+  }
+
+  @if (isLoading()) {
+    <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="findings-loading">
+      <span class="sr-only">Analyse des mesures…</span>
+      <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+    </div>
+  } @else if (problem(); as problem) {
+    <p class="callout callout--error" role="alert" data-testid="findings-error">{{ problem | problemMessage: 'Mesures' }}</p>
+  } @else {
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-md">
+        <h2 class="text-heading" data-testid="waste-title">Gaspillages</h2>
+        <div class="overflow-auto">
+          <table mat-table [dataSource]="wasteRows()" data-testid="waste-table">
+            <ng-container matColumnDef="building">
+              <th mat-header-cell *matHeaderCellDef scope="col">Bâtiment</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell>
+                  <a [routerLink]="['/buildings', finding.buildingId]" class="text-strong" data-testid="waste-building">{{ finding.buildingName }}</a>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="kind">
+              <th mat-header-cell *matHeaderCellDef scope="col">Anomalie</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell class="text-strong" data-testid="waste-kind">{{ finding.kind | findingKindLabel }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="statement">
+              <th mat-header-cell *matHeaderCellDef scope="col">Constat</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell data-testid="waste-statement">{{ finding | findingStatement }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="period">
+              <th mat-header-cell *matHeaderCellDef scope="col">Période observée</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell class="text-nowrap" data-testid="waste-period">
+                  <time [attr.datetime]="finding.firstSeenAt">{{ finding.firstSeenAt | date: 'dd/MM/yyyy' : LOCAL_TIMEZONE }}</time>
+                  →
+                  <time [attr.datetime]="finding.lastSeenAt">{{ finding.lastSeenAt | date: 'dd/MM/yyyy' : LOCAL_TIMEZONE }}</time>
+                  <span class="text-muted" data-testid="waste-occurrences">· {{ finding.occurrences | dayCount }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="flaggedByAnalyst">
+              <th mat-header-cell *matHeaderCellDef scope="col">Signalée par l'analyste</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell>
+                  @if (finding.isFlaggedByAnalyst) {
+                    <span class="tag" data-testid="waste-analyst">Oui</span>
+                  } @else {
+                    <span class="tag tag--neutral" data-testid="waste-analyst">Non</span>
+                  }
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="evidence">
+              <th mat-header-cell *matHeaderCellDef scope="col"><span class="sr-only">Preuve</span></th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="wasteRows()">
+                <td mat-cell class="text-nowrap">
+                  @if (finding.evidenceLink; as link) {
+                    <a [routerLink]="link.commands" [queryParams]="link.queryParams" data-testid="waste-evidence-link">Voir les mesures</a>
+                  }
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="WASTE_COLUMNS"></tr>
+            <tr mat-row *matRowDef="let row; columns: WASTE_COLUMNS" data-testid="waste-row"></tr>
+            <tr *matNoDataRow>
+              <td [attr.colspan]="WASTE_COLUMNS.length" class="px-lg py-md text-muted" data-testid="waste-empty">Aucun gaspillage détecté.</td>
+            </tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-md">
+        <div class="flex flex-column gap-xs">
+          <h2 class="text-heading" data-testid="data-quality-title">Données à fiabiliser</h2>
+          <p class="text-muted text-caption">Ces mesures sont écartées de la détection des gaspillages.</p>
+        </div>
+        <div class="overflow-auto">
+          <table mat-table [dataSource]="dataQualityRows()" data-testid="data-quality-table">
+            <ng-container matColumnDef="building">
+              <th mat-header-cell *matHeaderCellDef scope="col">Bâtiment</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="dataQualityRows()">
+                <td mat-cell>
+                  <a [routerLink]="['/buildings', finding.buildingId]" class="text-strong" data-testid="data-quality-building">{{ finding.buildingName }}</a>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="equipment">
+              <th mat-header-cell *matHeaderCellDef scope="col">Capteur</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="dataQualityRows()">
+                <td mat-cell>
+                  @if (finding.evidenceLink; as link) {
+                    <a [routerLink]="link.commands" [queryParams]="link.queryParams" class="text-strong" data-testid="data-quality-equipment">{{ finding.equipmentName }}</a>
+                  } @else {
+                    <span data-testid="data-quality-equipment">{{ finding.equipmentName }}</span>
+                  }
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="kind">
+              <th mat-header-cell *matHeaderCellDef scope="col">Défaut</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="dataQualityRows()">
+                <td mat-cell data-testid="data-quality-kind">
+                  <span class="tag tag--neutral">{{ finding.kind | findingKindLabel }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="statement">
+              <th mat-header-cell *matHeaderCellDef scope="col">Constat</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="dataQualityRows()">
+                <td mat-cell data-testid="data-quality-statement">{{ finding | findingStatement }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="period">
+              <th mat-header-cell *matHeaderCellDef scope="col">Période</th>
+              <ng-template matCellDef let-finding [sbTemplateItemOf]="dataQualityRows()">
+                <td mat-cell class="text-nowrap" data-testid="data-quality-period">
+                  <time [attr.datetime]="finding.firstSeenAt">{{ finding.firstSeenAt | date: 'dd/MM/yyyy HH:mm' : LOCAL_TIMEZONE }}</time>
+                  →
+                  <time [attr.datetime]="finding.lastSeenAt">{{ finding.lastSeenAt | date: 'dd/MM/yyyy HH:mm' : LOCAL_TIMEZONE }}</time>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="DATA_QUALITY_COLUMNS"></tr>
+            <tr mat-row *matRowDef="let row; columns: DATA_QUALITY_COLUMNS" data-testid="data-quality-row"></tr>
+            <tr *matNoDataRow>
+              <td [attr.colspan]="DATA_QUALITY_COLUMNS.length" class="px-lg py-md text-muted" data-testid="data-quality-empty">Aucun défaut de données détecté.</td>
+            </tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</section>

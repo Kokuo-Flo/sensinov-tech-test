@@ -32,6 +32,7 @@ import { LineChartComponent } from '#components/line-chart/line-chart.component'
 import { TemplateItemDirective } from '#directives/template-item.directive';
 import { type BreadcrumbLink } from '#models/breadcrumb.model';
 import { isMetricKey } from '#models/equipment.model';
+import { LOCAL_DATE_PIPE_TIMEZONE } from '#models/local-time.model';
 import { isMeasurementPeriod } from '#models/measurement-period.model';
 import { EquipmentTypeLabelPipe } from '#pipes/equipment-type-label.pipe';
 import { MeterScopeLabelPipe } from '#pipes/meter-scope-label.pipe';
@@ -83,10 +84,16 @@ export class EquipmentDetailComponent {
   // --- Constants ---
   public readonly LATEST_POINTS_COUNT = this._equipmentDetailService.LATEST_POINTS_COUNT;
   public readonly LATEST_VALUES_COLUMNS = ['timestamp', 'value'] as const;
+  /** Timestamps are shown in the buildings' local time, like the chart and the detection rules. */
+  public readonly LOCAL_TIMEZONE = LOCAL_DATE_PIPE_TIMEZONE;
 
   // --- Inputs ---
   /** Route parameter `:equipmentId`. */
   public readonly equipmentId = input.required<string>();
+  /** Optional query parameter `?metric=`: series shown first. */
+  public readonly metric = input<string>();
+  /** Optional query parameter `?period=`: period shown first. */
+  public readonly period = input<string>();
 
   // --- Signals from services ---
   public readonly equipment = this._equipmentDetailService.equipment;
@@ -131,6 +138,7 @@ export class EquipmentDetailComponent {
 
   constructor() {
     this._equipmentDetailService.connect(this.equipmentId);
+    this._equipmentDetailService.connectQuery(this.metric, this.period);
   }
 
   public onSelectMetric(event: MatSelectChange): void {

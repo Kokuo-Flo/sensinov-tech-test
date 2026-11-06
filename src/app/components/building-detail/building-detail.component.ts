@@ -90,6 +90,7 @@ export class BuildingDetailComponent {
   public readonly equipments = this._buildingDetailService.equipments;
   public readonly isLoading = this._buildingDetailService.isLoading;
   public readonly problem = this._buildingDetailService.problem;
+  public readonly findingCount = this._buildingDetailService.findingCount;
 
   // --- Internal signals ---
   private readonly _sort = signal<TableSort>({ active: 'name', direction: 'asc' });
@@ -97,6 +98,7 @@ export class BuildingDetailComponent {
   public readonly sortedEquipments = computed(() =>
     sortRows(this.equipments(), this._sort(), this.SORTABLE_COLUMNS),
   );
+  public readonly findingsQueryParams = computed(() => ({ building: this.buildingId() }));
   public readonly breadcrumbItems = computed<BreadcrumbLink[]>(() => {
     const root: BreadcrumbLink = {
       label: 'Bâtiments',

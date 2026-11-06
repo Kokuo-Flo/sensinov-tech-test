@@ -30,6 +30,20 @@
             <dd class="text-strong" data-testid="building-floors">{{ building.floors }}</dd>
           </div>
         </dl>
+        @let count = findingCount();
+        @if (count !== null) {
+          @if (count > 0) {
+            <a routerLink="/findings" [queryParams]="findingsQueryParams()" class="text-strong" data-testid="building-findings-link">
+              @if (count === 1) {
+                1 anomalie détectée
+              } @else {
+                {{ count }} anomalies détectées
+              }
+            </a>
+          } @else {
+            <p class="text-muted" data-testid="building-findings-none">Aucune anomalie détectée.</p>
+          }
+        }
       </mat-card-content>
     </mat-card>
 

@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { NEVER, of, throwError } from 'rxjs';
 
 import { BuildingDao } from '#dao/building.dao';
+import { type DataProblem } from '#models/data-problem.model';
+import { FindingService } from '#services/finding.service';
 import { makeBuilding, makeEquipment } from '#testing/fixtures';
 import { provideServiceMock } from '#testing/service-mock';
 import { notFound } from '#utils/data-problem.utils';
@@ -10,13 +12,27 @@ import { settle } from '#testing/settle';
 
 import { BuildingDetailService } from './building-detail.service';
 
-function setup(overrides: Partial<BuildingDao> = {}): {
+interface FindingState {
+  readonly counts?: Map<string, number>;
+  readonly isLoading?: boolean;
+  readonly problem?: DataProblem | null;
+}
+
+function setup(
+  overrides: Partial<BuildingDao> = {},
+  findingState: FindingState = {},
+): {
   service: BuildingDetailService;
   dao: BuildingDao;
 } {
   TestBed.configureTestingModule({
     providers: [
       BuildingDetailService,
+      provideServiceMock(FindingService, {
+        findingCountByBuilding: signal(findingState.counts ?? new Map<string, number>()),
+        isLoading: signal(findingState.isLoading ?? false),
+        problem: signal(findingState.problem ?? null),
+      }),
       provideServiceMock(BuildingDao, {
         getById: vi.fn((id: string) => of(makeBuilding({ id }))),
         getEquipments: vi.fn((id: string) =>
@@ -101,5 +117,53 @@ describe('BuildingDetailService', () => {
     await settle();
 
     expect(service.problem()?.type).toBe('unknown-error');
+  });
+  describe('findingCount', () => {
+    it('should be unknown before connect', async () => {
+      const { service } = setup({}, { counts: new Map([['bld-a', 2]]) });
+
+      await settle();
+
+      expect(service.findingCount()).toBeNull();
+    });
+
+    it('should count the findings of the connected building', async () => {
+      const { service } = setup({}, { counts: new Map([['bld-a', 2]]) });
+
+      service.connect(signal('bld-a'));
+      await settle();
+
+      expect(service.findingCount()).toBe(2);
+    });
+
+    it('should be 0 for a building without finding', async () => {
+      const { service } = setup({}, { counts: new Map([['bld-a', 2]]) });
+
+      service.connect(signal('bld-b'));
+      await settle();
+
+      expect(service.findingCount()).toBe(0);
+    });
+
+    it('should be unknown while the detection runs', async () => {
+      const { service } = setup({}, { counts: new Map([['bld-a', 2]]), isLoading: true });
+
+      service.connect(signal('bld-a'));
+      await settle();
+
+      expect(service.findingCount()).toBeNull();
+    });
+
+    it('should be unknown when the detection failed', async () => {
+      const { service } = setup(
+        {},
+        { counts: new Map([['bld-a', 2]]), problem: { type: 'unknown-error', title: 'x' } },
+      );
+
+      service.connect(signal('bld-a'));
+      await settle();
+
+      expect(service.findingCount()).toBeNull();
+    });
   });
 });

@@ -1,14 +1,27 @@
+/**
+ * Connected device installed in a building (meter, air handling unit, sensor) and the metrics it reports.
+ * Shown on the building and equipment pages, read by the detection rules.
+ */
+
+/** Kind of device. */
 export const EQUIPMENT_TYPES = [
   'energy-meter',
   'hvac-unit',
   'occupancy-sensor',
   'temperature-sensor',
 ] as const;
-export type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
 
+/**
+ * Perimeter an energy meter measures: `'main'` = whole building, `'hvac'` = heating / ventilation /
+ * air-conditioning sub-meter, `'lighting-plugs'` = lighting and plug loads sub-meter.
+ */
 export const METER_SCOPES = ['main', 'hvac', 'lighting-plugs'] as const;
-export type MeterScope = (typeof METER_SCOPES)[number];
 
+/**
+ * Physical quantities an equipment can report: `'active-energy'` (energy over the interval),
+ * `'hvac-status'` (on/off), `'heating-setpoint'` (°C), `'occupancy-count'` (persons),
+ * `'indoor-temperature'` (°C).
+ */
 export const METRIC_KEYS = [
   'active-energy',
   'hvac-status',
@@ -16,29 +29,40 @@ export const METRIC_KEYS = [
   'occupancy-count',
   'indoor-temperature',
 ] as const;
+
+/** Interval between two readings of an equipment, minutes. */
+export const SAMPLING_INTERVALS_MINUTES = [15, 60] as const;
+
+export type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
+
+export type MeterScope = (typeof METER_SCOPES)[number];
+
 export type MetricKey = (typeof METRIC_KEYS)[number];
 
-export const SAMPLING_INTERVALS_MINUTES = [15, 60] as const;
 export type SamplingIntervalMinutes = (typeof SAMPLING_INTERVALS_MINUTES)[number];
 
+/** One metric reported by an equipment, with the unit its vendor sends it in. */
 export interface MetricDefinition {
   readonly key: MetricKey;
-  /** Vendor unit, as received: `'kWh' | 'Wh' | '°C' | 'pers.' | 'on/off'`. */
+  /** Vendor unit, as received: `'kWh'`, `'Wh'`, `'°C'`, `'pers.'` or `'on/off'`. */
   readonly unit: string;
 }
 
 export interface Equipment {
-  /** e.g. `'eq-warsaw-hvac-meter'`. */
+  /** Stable slug, e.g. `'eq-warsaw-hvac-meter'`. */
   readonly id: string;
   readonly buildingId: string;
   /** Vendor-style label: `'CPT-CVC-01'`, `'AHU_North'`… */
   readonly name: string;
+
   readonly type: EquipmentType;
-  /** Fictional vendor. */
+  /** Fictional vendor; each vendor has its own naming, unit and sampling habits. */
   readonly vendor: string;
+  /** Location in the building (`'Nord'`, `'Toiture'`…); `null` for meters, which cover the whole building. */
   readonly zone: string | null;
-  /** Energy meters only. */
+  /** Perimeter measured; set for energy meters only, `null` otherwise. */
   readonly meterScope: MeterScope | null;
+
   readonly samplingIntervalMinutes: SamplingIntervalMinutes;
   readonly metrics: readonly MetricDefinition[];
 }

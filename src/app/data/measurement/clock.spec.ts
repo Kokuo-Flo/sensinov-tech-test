@@ -1,3 +1,5 @@
+import { MEASUREMENT_REFERENCE_INSTANT } from '#models/measurement-period.model';
+
 import { BASE_STEP_COUNT, getStepClock, MEASUREMENT_WINDOW, WINDOW_DAYS } from './clock';
 
 describe('clock', () => {
@@ -5,6 +7,10 @@ describe('clock', () => {
     expect(WINDOW_DAYS).toBe(56);
     expect(BASE_STEP_COUNT).toBe(5376);
     expect(MEASUREMENT_WINDOW.from).toBe('2026-09-07T00:00:00.000Z');
+  });
+
+  it('should end the window on the measurement reference instant', () => {
+    expect(MEASUREMENT_WINDOW.to).toBe(MEASUREMENT_REFERENCE_INSTANT);
   });
 
   it('should read the first step as Monday 01:00 local time (UTC+1)', () => {

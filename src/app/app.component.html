@@ -2,8 +2,16 @@
   <header class="border-bottom">
     <mat-toolbar class="app-shell__toolbar">
       <div class="app-shell__bar flex items-center gap-2xl w-100">
-        <a routerLink="/buildings" class="app-shell__brand text-heading text-primary" data-testid="app-title">Smart Building</a>
+        <a routerLink="/priorities" class="app-shell__brand text-heading text-primary" data-testid="app-title">Smart Building</a>
         <nav aria-label="Navigation principale" class="flex items-center gap-xs">
+          <a
+            routerLink="/priorities"
+            routerLinkActive="app-shell__nav-link--active"
+            ariaCurrentWhenActive="page"
+            class="app-shell__nav-link px-md py-sm rounded text-body text-strong"
+            data-testid="nav-priorities"
+            >Priorités</a
+          >
           <a
             routerLink="/buildings"
             routerLinkActive="app-shell__nav-link--active"
@@ -11,6 +19,14 @@
             class="app-shell__nav-link px-md py-sm rounded text-body text-strong"
             data-testid="nav-buildings"
             >Bâtiments</a
+          >
+          <a
+            routerLink="/findings"
+            routerLinkActive="app-shell__nav-link--active"
+            ariaCurrentWhenActive="page"
+            class="app-shell__nav-link px-md py-sm rounded text-body text-strong"
+            data-testid="nav-findings"
+            >Anomalies</a
           >
           <a
             routerLink="/reports"

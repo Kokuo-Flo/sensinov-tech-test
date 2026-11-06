@@ -1,0 +1,8 @@
+.priorities__kpis {
+  grid-template-columns: repeat(auto-fit, minmax(var(--size-kpi-min-width), 1fr));
+}
+
+.priorities__kpi-value {
+  font: var(--mat-sys-headline-medium);
+  font-weight: var(--mat-sys-title-medium-weight);
+}

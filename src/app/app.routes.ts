@@ -1,7 +1,13 @@
 import { type Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'buildings' },
+  { path: '', pathMatch: 'full', redirectTo: 'priorities' },
+  {
+    path: 'priorities',
+    title: 'Priorités — Smart Building',
+    loadComponent: async () =>
+      (await import('./components/priorities/priorities.component')).PrioritiesComponent,
+  },
   {
     path: 'buildings',
     title: 'Bâtiments — Smart Building',
@@ -23,11 +29,17 @@ export const routes: Routes = [
         .EquipmentDetailComponent,
   },
   {
+    path: 'findings',
+    title: 'Anomalies — Smart Building',
+    loadComponent: async () =>
+      (await import('./components/findings/findings.component')).FindingsComponent,
+  },
+  {
     path: 'reports',
     title: 'Rapport analyste — Smart Building',
     loadComponent: async () =>
       (await import('./components/analyst-report/analyst-report.component'))
         .AnalystReportComponent,
   },
-  { path: '**', redirectTo: 'buildings' },
+  { path: '**', redirectTo: 'priorities' },
 ];

@@ -318,15 +318,37 @@ describe('EquipmentDetailComponent', () => {
     });
 
     it('should format timestamps as dd/MM/yyyy HH:mm', async () => {
-      const timestamp = '2026-10-30T10:05:00.000Z';
-      latestPoints.set([makePoint(timestamp, 1)]);
+      latestPoints.set([makePoint('2026-10-30T10:05:00.000Z', 1)]);
       await renderLoaded();
 
-      const local = new Date(timestamp);
-      const pad = (value: number): string => String(value).padStart(2, '0');
-      expect(text('[data-testid="latest-value-timestamp"]')).toBe(
-        `${pad(local.getDate())}/${pad(local.getMonth() + 1)}/${local.getFullYear()} ${pad(local.getHours())}:${pad(local.getMinutes())}`,
-      );
+      expect(text('[data-testid="latest-value-timestamp"]')).toBe('30/10/2026 11:05');
     });
+
+    it('should show timestamps in local time (+01:00), a point at 03:00Z reading 04:00', async () => {
+      latestPoints.set([makePoint('2026-09-07T03:00:00.000Z', 1)]);
+      await renderLoaded();
+
+      expect(text('[data-testid="latest-value-timestamp"]')).toBe('07/09/2026 04:00');
+    });
+  });
+  it('should hand its metric and period query parameters to the service', async () => {
+    fixture = TestBed.createComponent(EquipmentDetailComponent);
+    fixture.componentRef.setInput('equipmentId', 'eq-1');
+    fixture.componentRef.setInput('metric', 'hvac-status');
+    fixture.componentRef.setInput('period', '8-weeks');
+    service = fixture.debugElement.injector.get(EquipmentDetailService);
+    await fixture.whenStable();
+
+    const [metric, period] = vi.mocked(service.connectQuery).mock.calls[0] ?? [];
+    expect(metric?.()).toBe('hvac-status');
+    expect(period?.()).toBe('8-weeks');
+  });
+
+  it('should hand undefined query parameters when the route has none', async () => {
+    await render();
+
+    const [metric, period] = vi.mocked(service.connectQuery).mock.calls[0] ?? [];
+    expect(metric?.()).toBeUndefined();
+    expect(period?.()).toBeUndefined();
   });
 });

@@ -1,0 +1,237 @@
+<section class="flex flex-column gap-xl">
+  <div class="flex flex-column gap-xs">
+    <h1 class="text-title" data-testid="priorities-title">Priorités</h1>
+    <p class="text-muted">Gaspillages détectés sur les 8 dernières semaines, chiffrés à l'année et classés par enjeu.</p>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex flex-column gap-sm py-md" role="status" aria-busy="true" data-testid="priorities-loading">
+      <span class="sr-only">Analyse des mesures…</span>
+      <mat-progress-bar mode="indeterminate" aria-hidden="true" />
+    </div>
+  } @else if (problem(); as problem) {
+    <p class="callout callout--error" role="alert" data-testid="priorities-error">{{ problem | problemMessage: 'Mesures' }}</p>
+  } @else {
+    @let total = totals();
+    @let method = assumptions();
+    @let reduction = estimatedReduction();
+
+    <p class="text-body" data-testid="priorities-summary">
+      Les gaspillages détectés représentent <strong>{{ total.annualEmissionsKgCo2e | tonnesCo2e }}/an</strong>, soit
+      <strong>−{{ reduction.reductionPercent | number: '1.1-1' }} %</strong> des émissions annuelles du parc.
+    </p>
+
+    <div class="priorities__kpis grid gap-lg" data-testid="priorities-kpis">
+      <mat-card appearance="outlined">
+        <mat-card-content class="flex flex-column gap-xs">
+          <span class="text-muted text-caption">Émissions évitables</span>
+          <span class="priorities__kpi-value" data-testid="kpi-emissions">{{ total.annualEmissionsKgCo2e | tonnesCo2e }}/an</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content class="flex flex-column gap-xs">
+          <span class="text-muted text-caption">Économies possibles</span>
+          <span class="priorities__kpi-value" data-testid="kpi-cost">{{ total.annualCostEur | euros }}/an</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content class="flex flex-column gap-xs">
+          <span class="text-muted text-caption">Réduction estimée</span>
+          <span class="priorities__kpi-value" data-testid="kpi-reduction">−{{ reduction.reductionPercent | number: '1.1-1' }} %</span>
+          <span class="text-muted text-caption" data-testid="kpi-reduction-base">
+            des émissions du parc · base : {{ reduction.baselineEmissionsKgCo2e | tonnesCo2e }}/an
+          </span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    @if (hasDataQualityBuildings()) {
+      <p class="callout flex flex-wrap items-center gap-sm" data-testid="priorities-data-quality">
+        <span class="tag tag--neutral">Chiffres à confirmer</span>
+        <span>Défaut de données sur</span>
+        @for (building of dataQualityBuildings(); track building.id) {
+          <a routerLink="/findings" [queryParams]="{ building: building.id }" class="text-strong" data-testid="priorities-data-quality-building">{{ building.name }}</a>
+        }
+      </p>
+    }
+
+    <mat-card appearance="outlined">
+      <mat-card-content class="flex flex-column gap-md">
+        <div class="flex flex-wrap items-center justify-between gap-md">
+          <h2 class="text-heading" data-testid="priorities-table-title">Gaspillages classés</h2>
+          <div class="flex items-center gap-sm">
+            <span id="priorities-sort-label" class="text-muted">Classer par</span>
+            <mat-button-toggle-group
+              [value]="sortKey()"
+              (change)="onSelectSortKey($event)"
+              [hideSingleSelectionIndicator]="true"
+              aria-labelledby="priorities-sort-label"
+              data-testid="priorities-sort"
+            >
+              <mat-button-toggle value="emissions" data-testid="priorities-sort-emissions">CO₂</mat-button-toggle>
+              <mat-button-toggle value="cost" data-testid="priorities-sort-cost">€</mat-button-toggle>
+              <mat-button-toggle value="energy" data-testid="priorities-sort-energy">kWh</mat-button-toggle>
+            </mat-button-toggle-group>
+          </div>
+        </div>
+
+        <div class="overflow-auto">
+          <table mat-table [dataSource]="rows()" data-testid="priorities-table">
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="cell-numeric">Rang</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell class="cell-numeric text-strong" data-testid="priority-rank">{{ row.rank }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="building">
+              <th mat-header-cell *matHeaderCellDef scope="col">Bâtiment</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell>
+                  <div class="flex flex-column items-start gap-2xs">
+                    <a [routerLink]="['/buildings', row.finding.buildingId]" class="text-strong" data-testid="priority-building">{{ row.buildingName }}</a>
+                    <span class="text-muted text-caption" data-testid="priority-country">{{ row.country.name }}</span>
+                    @if (row.hasDataQualityIssue) {
+                      <span class="tag tag--neutral" data-testid="priority-to-confirm">Chiffres à confirmer</span>
+                    }
+                  </div>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="kind">
+              <th mat-header-cell *matHeaderCellDef scope="col">Anomalie</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell>
+                  <a routerLink="/findings" [queryParams]="{ building: row.finding.buildingId }" data-testid="priority-finding-link">{{ row.finding.kind | findingKindLabel }}</a>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="energy">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="cell-numeric">kWh/an</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell class="cell-numeric text-nowrap" data-testid="priority-energy">{{ row.impact.annualEnergyKwh | kwh }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="cost">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="cell-numeric">€/an</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell class="cell-numeric text-nowrap" data-testid="priority-cost">{{ row.impact.annualCostEur | euros }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="emissions">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="cell-numeric">tCO₂e/an</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell class="cell-numeric text-nowrap text-strong" data-testid="priority-emissions">{{ row.impact.annualEmissionsKgCo2e | tonnesCo2e }}</td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="confidence">
+              <th mat-header-cell *matHeaderCellDef scope="col">Confiance</th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell>
+                  <span class="tag" [class.tag--neutral]="row.impact.confidence !== 'high'" data-testid="priority-confidence">{{ row.impact.confidence | confidenceLabel }}</span>
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <ng-container matColumnDef="evidence">
+              <th mat-header-cell *matHeaderCellDef scope="col"><span class="sr-only">Preuve</span></th>
+              <ng-template matCellDef let-row [sbTemplateItemOf]="rows()">
+                <td mat-cell class="text-nowrap">
+                  @if (row.evidenceLink; as link) {
+                    <a [routerLink]="link.commands" [queryParams]="link.queryParams" data-testid="priority-evidence-link">Voir les mesures</a>
+                  }
+                </td>
+              </ng-template>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="COLUMNS"></tr>
+            <tr mat-row *matRowDef="let row; columns: COLUMNS" data-testid="priority-row"></tr>
+            <tr *matNoDataRow>
+              <td [attr.colspan]="COLUMNS.length" class="px-lg py-md text-muted" data-testid="priorities-empty">Aucun gaspillage chiffré.</td>
+            </tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-expansion-panel data-testid="method-panel">
+      <mat-expansion-panel-header>
+        <mat-panel-title data-testid="method-title">Comment c'est calculé</mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <div class="flex flex-column gap-lg">
+        <div class="flex flex-column gap-sm">
+          <h3 class="text-strong">1. Énergie en trop sur les {{ method.windowWeeks }} semaines analysées</h3>
+          <ul class="flex flex-column gap-xs" data-testid="method-rules">
+            <li data-testid="method-weekend-hvac">
+              <span class="text-strong">CVC en marche le week-end</span> : énergie CVC consommée les week-ends sans occupants, pour une
+              référence de 0 kWh. Confiance haute : mesurée.
+            </li>
+            <li data-testid="method-early-hvac-start">
+              <span class="text-strong">Démarrage trop matinal de la CVC</span> : énergie CVC consommée entre le démarrage observé et
+              {{ method.earlyStartReferenceLeadHours }} h avant l'arrivée des occupants × {{ method.earlyStartRecoverableShare | number }},
+              le reste étant de toute façon dépensé pour remettre le bâtiment en température après un démarrage normal. Confiance
+              moyenne.
+            </li>
+            <li data-testid="method-night-baseload">
+              <span class="text-strong">Éclairage et prises allumés la nuit</span> : (puissance de nuit −
+              {{ method.nightHealthyRatio | number }} × puissance de jour) × {{ method.nightClosedHoursPerWorkingDay }} h hors ouverture,
+              chaque jour ouvré. Les week-ends ne sont pas comptés. Confiance moyenne.
+            </li>
+            <li data-testid="method-heating-setpoint">
+              <span class="text-strong">Consigne de chauffage trop haute</span> : énergie CVC ×
+              {{ method.setpointEnergySharePerCelsius | percent }} par °C au-dessus de {{ method.setpointReferenceCelsius }} °C, ordre de
+              grandeur courant à faire valider par un thermicien. Confiance moyenne.
+            </li>
+            <li data-testid="method-low-occupancy">
+              <span class="text-strong">Bâtiment sous-occupé</span> : énergie CVC × (1 − occupation observée /
+              {{ method.nominalOccupancyPeakRatio | percent }}) × {{ method.lowOccupancyRecoverableShare | number }}. Suppose de
+              regrouper les occupants. Confiance faible.
+            </li>
+            <li class="text-muted" data-testid="method-data-quality">
+              Les mesures douteuses (capteur figé, données manquantes) sont écartées avant le calcul.
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex flex-column gap-sm">
+          <h3 class="text-strong">2. Passage à l'année</h3>
+          <p data-testid="method-annualisation">
+            Total des {{ method.windowWeeks }} semaines × {{ method.weeksPerYear }} / {{ method.windowWeeks }}, soit ×
+            {{ method.annualisationFactor | number: '1.0-2' }}. Extrapolation linéaire, sans effet des saisons : elle sous-estime les
+            excès de chauffage en hiver.
+          </p>
+        </div>
+
+        <div class="flex flex-column gap-sm">
+          <h3 class="text-strong">3. Conversion en euros et en CO₂</h3>
+          <p>
+            kWh × prix de l'électricité du pays donne les €. kWh × facteur d'émission annuel moyen du réseau du pays donne les kgCO₂e.
+          </p>
+          <ul class="flex flex-column gap-xs" data-testid="method-countries">
+            @for (country of method.countries; track country.code) {
+              <li data-testid="method-country">
+                <span class="text-strong">{{ country.name }}</span> :
+                {{ country.gridEmissionFactorKgCo2ePerKwh | number: '1.2-2' }} kgCO₂e/kWh,
+                {{ country.electricityPriceEurPerKwh | number: '1.2-2' }} €/kWh
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="flex flex-column gap-sm">
+          <h3 class="text-strong">4. Réduction estimée</h3>
+          <p data-testid="method-reduction">
+            tCO₂e évitables / émissions annuelles de référence (consommation de référence de chaque bâtiment × facteur de son pays),
+            soit {{ reduction.identifiedKgCo2e | tonnesCo2e }}/an sur {{ reduction.baselineEmissionsKgCo2e | tonnesCo2e }}/an.
+          </p>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  }
+</section>

@@ -7,6 +7,7 @@ import {
   type LineChartOptions,
   type LineChartPoint,
 } from '#models/line-chart.model';
+import { LOCAL_INTL_TIMEZONE } from '#models/local-time.model';
 import { type MeasurementPoint } from '#models/measurement.model';
 
 /** Above this many points, dots would hide the line: only the line is drawn. */
@@ -17,6 +18,7 @@ const TIMESTAMP_TICK_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   month: '2-digit',
   hour: '2-digit',
   minute: '2-digit',
+  timeZone: LOCAL_INTL_TIMEZONE,
 });
 
 const VALUE_FORMAT = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 });
@@ -123,7 +125,7 @@ export function readLineChartColors(
   return Object.values(colors).every((color: string) => color !== '') ? colors : null;
 }
 
-/** French short date-time label (`05/10 14:00`) for an epoch-ms axis value. */
+/** French short date-time label in the buildings' local time (`05/10 14:00`) for an epoch-ms axis value. */
 export function formatChartTimestamp(timestampMs: number): string {
   return TIMESTAMP_TICK_FORMAT.format(timestampMs);
 }

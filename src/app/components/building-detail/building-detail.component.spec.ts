@@ -21,6 +21,7 @@ describe('BuildingDetailComponent', () => {
   let fixture: ComponentFixture<BuildingDetailComponent>;
   let building: WritableSignal<Building | null>;
   let equipments: WritableSignal<Equipment[]>;
+  let findingCount: WritableSignal<number | null>;
   let isLoading: WritableSignal<boolean>;
   let problem: WritableSignal<DataProblem | null>;
 
@@ -47,6 +48,7 @@ describe('BuildingDetailComponent', () => {
   beforeEach(() => {
     building = signal<Building | null>(null);
     equipments = signal<Equipment[]>([]);
+    findingCount = signal<number | null>(null);
     isLoading = signal(false);
     problem = signal<DataProblem | null>(null);
     TestBed.configureTestingModule({
@@ -55,7 +57,13 @@ describe('BuildingDetailComponent', () => {
     TestBed.overrideComponent(BuildingDetailComponent, {
       set: {
         providers: [
-          provideServiceMock(BuildingDetailService, { building, equipments, isLoading, problem }),
+          provideServiceMock(BuildingDetailService, {
+            building,
+            equipments,
+            findingCount,
+            isLoading,
+            problem,
+          }),
         ],
       },
     });
@@ -87,6 +95,47 @@ describe('BuildingDetailComponent', () => {
       'Bâtiment introuvable.',
     );
     expect(one('[data-testid="building-name"]')).toBeNull();
+  });
+
+  it('should link to the findings of the building with the singular label for one finding', async () => {
+    building.set(makeBuilding());
+    findingCount.set(1);
+
+    await render();
+
+    const link = one('[data-testid="building-findings-link"]');
+    expect(link?.textContent?.trim()).toBe('1 anomalie détectée');
+    expect(link?.getAttribute('href')).toBe('/findings?building=bld-warsaw');
+    expect(one('[data-testid="building-findings-none"]')).toBeNull();
+  });
+
+  it('should use the plural label from two findings', async () => {
+    building.set(makeBuilding());
+    findingCount.set(3);
+
+    await render();
+
+    expect(one('[data-testid="building-findings-link"]')?.textContent?.trim()).toBe('3 anomalies détectées');
+  });
+
+  it('should say no finding was detected when the count is 0', async () => {
+    building.set(makeBuilding());
+    findingCount.set(0);
+
+    await render();
+
+    expect(one('[data-testid="building-findings-none"]')?.textContent?.trim()).toBe('Aucune anomalie détectée.');
+    expect(one('[data-testid="building-findings-link"]')).toBeNull();
+  });
+
+  it('should show nothing about findings while the detection runs or failed (count unknown)', async () => {
+    building.set(makeBuilding());
+    findingCount.set(null);
+
+    await render();
+
+    expect(one('[data-testid="building-findings-link"]')).toBeNull();
+    expect(one('[data-testid="building-findings-none"]')).toBeNull();
   });
 
   it('should show the generic French message on another problem', async () => {

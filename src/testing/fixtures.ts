@@ -1,5 +1,8 @@
 import { type AnalystReport } from '#models/analyst-report.model';
 import { type Building } from '#models/building.model';
+import { type Country } from '#models/country.model';
+import { type Finding, getFindingCategory, getFindingId } from '#models/finding.model';
+import { type ImpactEstimate } from '#models/impact.model';
 import { type Equipment } from '#models/equipment.model';
 import { type MeasurementPoint, type MeasurementSeries } from '#models/measurement.model';
 
@@ -55,6 +58,47 @@ export function makeReport(overrides: Partial<AnalystReport> = {}): AnalystRepor
     author: 'Alice Martin',
     publishedAt: '2026-10-15T00:00:00.000Z',
     recommendations: [],
+    ...overrides,
+  };
+}
+
+export function makeFinding(overrides: Partial<Finding> = {}): Finding {
+  const kind = overrides.kind ?? 'weekend-hvac';
+  const buildingId = overrides.buildingId ?? 'bld-warsaw';
+  return {
+    id: getFindingId(kind, buildingId),
+    kind,
+    category: getFindingCategory(kind),
+    buildingId,
+    firstSeenAt: '2026-09-07T00:00:00.000Z',
+    lastSeenAt: '2026-10-30T22:45:00.000Z',
+    occurrences: 10,
+    observed: 10,
+    reference: 16,
+    unit: 'days',
+    evidence: [{ equipmentId: 'eq-1', metric: 'hvac-status' }],
+    excessEnergyKwh: 1000,
+    ...overrides,
+  };
+}
+
+export function makeCountry(overrides: Partial<Country> = {}): Country {
+  return {
+    code: 'PL',
+    name: 'Pologne',
+    gridEmissionFactorKgCo2ePerKwh: 0.5,
+    electricityPriceEurPerKwh: 0.2,
+    ...overrides,
+  };
+}
+
+export function makeImpact(overrides: Partial<ImpactEstimate> = {}): ImpactEstimate {
+  return {
+    findingId: 'weekend-hvac:bld-warsaw',
+    annualEnergyKwh: 1000,
+    annualCostEur: 200,
+    annualEmissionsKgCo2e: 500,
+    confidence: 'high',
     ...overrides,
   };
 }
